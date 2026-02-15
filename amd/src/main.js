@@ -1897,9 +1897,11 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                     $tbody.append(rowHtml);
                 });
 
-                // Render Chart if valid data exists
-                if (typeof ChartJS !== 'undefined') {
-                    self.renderChart(data, keys);
+                // Render Chart based on AI recommendation
+                if (response.chart_type && response.chart_type !== 'none') {
+                    self.renderChart(data, response.chart_type, response.chart_label_column, response.chart_value_column);
+                } else {
+                    $('#magic-chart-container').hide();
                 }
             } else {
                 $tbody.append('<tr><td colspan="5" class="text-center text-muted">No results found.</td></tr>');
@@ -1907,61 +1909,149 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             }
         },
 
-        renderChart: function (data, keys) {
-            // Simple heuristic: 1st string column = Label, 1st number column = Value
-            var labelKey = keys.find(function (k) { return isNaN(data[0][k]); });
-            var valueKey = keys.find(function (k) { return !isNaN(data[0][k]); });
+        renderChart: function (data, chartType, labelColumn, valueColumn) {
+            var self = this;
+
+            // Fallback: if AI didn't provide columns, try to guess
+            if (!labelColumn || !valueColumn) {
+                var keys = Object.keys(data[0]);
+                labelColumn = labelColumn || keys.find(function (k) { return isNaN(data[0][k]); });
+                valueColumn = valueColumn || keys.find(function (k) { return !isNaN(data[0][k]); });
+            }
 
             var container = $('#magic-chart-container');
 
-            if (labelKey && valueKey) {
-                container.show();
-                var ctx = document.getElementById('magic-chart-canvas').getContext('2d');
+            if (!labelColumn || !valueColumn) {
+                container.hide();
+                return;
+            }
 
-                // Destroy old instance if exists
-                if (this.chartInstance) {
-                    this.chartInstance.destroy();
-                }
+            container.show();
 
-                var labels = data.map(function (d) { return d[labelKey]; });
-                var values = data.map(function (d) { return d[valueKey]; });
+            // Ensure canvas is fresh
+            var canvasParent = container.find('.chart-wrapper');
+            if (canvasParent.length === 0) {
+                canvasParent = container;
+            }
+            canvasParent.find('canvas').remove();
+            canvasParent.append('<canvas id="magic-chart-canvas" style="max-height:350px;"></canvas>');
 
-                this.chartInstance = new ChartJS(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: valueKey.replace(/_/g, ' '),
-                            data: values,
-                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        }]
+            var ctx = document.getElementById('magic-chart-canvas').getContext('2d');
+
+            // Destroy old instance if exists
+            if (this.chartInstance) {
+                this.chartInstance.destroy();
+            }
+
+            var labels = data.map(function (d) { return d[labelColumn]; });
+            var values = data.map(function (d) { return parseFloat(d[valueColumn]) || 0; });
+
+            // Beautiful color palette
+            var palette = [
+                'rgba(99, 102, 241, 0.8)',   // Indigo
+                'rgba(16, 185, 129, 0.8)',   // Emerald
+                'rgba(245, 158, 11, 0.8)',   // Amber
+                'rgba(239, 68, 68, 0.8)',    // Red
+                'rgba(59, 130, 246, 0.8)',   // Blue
+                'rgba(168, 85, 247, 0.8)',   // Purple
+                'rgba(236, 72, 153, 0.8)',   // Pink
+                'rgba(20, 184, 166, 0.8)',   // Teal
+                'rgba(249, 115, 22, 0.8)',   // Orange
+                'rgba(34, 197, 94, 0.8)',    // Green
+                'rgba(6, 182, 212, 0.8)',    // Cyan
+                'rgba(139, 92, 246, 0.8)',   // Violet
+            ];
+            var borderPalette = palette.map(function (c) { return c.replace('0.8', '1'); });
+
+            var isPieType = (chartType === 'pie' || chartType === 'doughnut');
+
+            var datasets;
+            if (isPieType) {
+                datasets = [{
+                    data: values,
+                    backgroundColor: palette.slice(0, values.length),
+                    borderColor: borderPalette.slice(0, values.length),
+                    borderWidth: 2,
+                    hoverOffset: 8
+                }];
+            } else {
+                datasets = [{
+                    label: valueColumn.replace(/_/g, ' '),
+                    data: values,
+                    backgroundColor: chartType === 'line' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.6)',
+                    borderColor: 'rgba(99, 102, 241, 1)',
+                    borderWidth: 2,
+                    borderRadius: chartType === 'bar' ? 6 : 0,
+                    fill: chartType === 'line',
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(99, 102, 241, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: chartType === 'line' ? 5 : 0,
+                    pointHoverRadius: chartType === 'line' ? 7 : 0
+                }];
+            }
+
+            var chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: isPieType,
+                        position: 'bottom',
+                        labels: {
+                            color: '#e0e0e0',
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            font: { size: 12 }
+                        }
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: { color: '#e0e0e0' }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                                ticks: { color: '#e0e0e0' }
-                            },
-                            x: {
-                                grid: { display: false },
-                                ticks: { color: '#e0e0e0' }
-                            }
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 30, 50, 0.95)',
+                        titleColor: '#fff',
+                        bodyColor: '#e0e0e0',
+                        borderColor: 'rgba(99, 102, 241, 0.5)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        padding: 12,
+                        displayColors: true
+                    }
+                }
+            };
+
+            // Add scales only for non-pie charts
+            if (!isPieType) {
+                chartOptions.scales = {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255, 255, 255, 0.06)' },
+                        ticks: {
+                            color: '#a0a0a0',
+                            font: { size: 11 }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#a0a0a0',
+                            font: { size: 11 },
+                            maxRotation: 45
                         }
                     }
-                });
-            } else {
-                container.hide();
+                };
             }
+
+            require(['core/chartjs'], function (ChartJS) {
+                self.chartInstance = new ChartJS(ctx, {
+                    type: chartType,
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: chartOptions
+                });
+            });
         },
 
         saveReport: function () {

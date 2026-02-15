@@ -37,27 +37,34 @@ class magic_analytics extends external_api
      */
     private static function get_schema_context()
     {
-        return "You are a Moodle SQL expert. Generate a SQL query compatible with Moodle's database structure.
-Tables:
-- {course}: id, fullname, shortname, category
-- {user}: id, username, firstname, lastname, email, city, country, lastaccess, suspended, deleted
-- {role_assignments}: id, roleid (3=teacher, 5=student), contextid, userid
-- {context}: id, contextlevel, instanceid (joins context to course/module)
-- {enrol}: id, enrol (method), courseid
-- {user_enrolments}: id, enrolid, userid, status (0=active)
-- {course_completions}: id, course, userid, timecompleted
-- {grade_items}: id, courseid, itemname, itemtype, grademin, grademax
-- {grade_grades}: id, itemid, userid, finalgrade
-- {modules}: id, name (assignment, quiz etc)
-- {course_modules}: id, course, module, instance
+        global $CFG;
+        return "You are an expert Moodle SQL query generator.
+Moodle version: " . $CFG->release . "
+Database: MySQL/MariaDB
 
-Rules:
-1. Use {table_name} syntax.
-2. Return ONLY valid JSON with keys: 'sql', 'explanation', 'chart_type' (bar, line, pie, table).
-3. Do not include markdown formatting (```json).
-4. SQL must be SELECT only. No DELETE, UPDATE, DROP.
-5. Limit results to 20 rows unless specified.
-6. For 'completion rates', use logic: (completed / enrolled) * 100.
+IMPORTANT RULES:
+1. Use Moodle's {table_name} placeholder syntax (e.g., {course}, {user}, {enrol}). Do NOT use mdl_ prefix.
+2. Return ONLY valid JSON with the following keys:
+   - 'sql': The SELECT query
+   - 'explanation': Brief human-readable explanation of results
+   - 'chart_type': One of 'bar', 'line', 'pie', 'doughnut', or 'none'. Use 'none' if the data is not suitable for a chart (e.g., text-heavy lists, single row, user details).
+   - 'chart_label_column': The SQL alias/column name to use as chart labels (X-axis or pie segments). Only if chart_type is not 'none'.
+   - 'chart_value_column': The SQL alias/column name to use as chart values (Y-axis or pie sizes). Only if chart_type is not 'none'.
+3. Do NOT wrap in markdown code blocks.
+4. SQL must be SELECT only. No INSERT, UPDATE, DELETE, DROP.
+5. Limit results to 20 rows unless the user specifies otherwise.
+6. Use standard Moodle table names and column names. You know the Moodle database schema well.
+7. Make sure all column references in SELECT, WHERE, HAVING, and ORDER BY clauses come from properly JOINed tables.
+8. Use meaningful column aliases (e.g., 'course_name', 'student_count') for readability.
+
+Chart Type Guidelines:
+- 'bar': Best for comparing quantities across categories (e.g., enrollments per course)
+- 'line': Best for trends over time (e.g., enrollments per month)
+- 'pie'/'doughnut': Best for showing proportions of a whole (e.g., user distribution by country)
+- 'none': Use when data is a list of items, contains only text, has a single row, or charting would not add value
+
+Example output:
+{\"sql\": \"SELECT c.fullname AS course_name, COUNT(ue.id) AS enrolled FROM {course} c JOIN {enrol} e ON e.courseid = c.id JOIN {user_enrolments} ue ON ue.enrolid = e.id GROUP BY c.id, c.fullname ORDER BY enrolled DESC LIMIT 10\", \"explanation\": \"Top 10 courses by enrollment count\", \"chart_type\": \"bar\", \"chart_label_column\": \"course_name\", \"chart_value_column\": \"enrolled\"}
 ";
     }
 
@@ -79,7 +86,7 @@ Rules:
         try {
             // Check if AI subsystem exists (Moodle 4.1+)
             if (!class_exists('\core_ai\manager')) {
-                throw new \moodle_exception('error', 'core', '', 'Moodle AI subsystem not found.');
+                throw new \Exception('Moodle AI subsystem not found.');
             }
 
             $action = new \core_ai\aiactions\generate_text(
@@ -89,19 +96,24 @@ Rules:
             );
 
             if (!class_exists('\core\di')) {
-                throw new \moodle_exception('error', 'core', '', 'Dependency Injection not found.');
+                throw new \Exception('Dependency Injection not found.');
             }
             $manager = \core\di::get(\core_ai\manager::class);
             $result = $manager->process_action($action);
 
-            if (method_exists($result, 'get_generatedcontent')) {
-                $generated_content = $result->get_generatedcontent();
-            } elseif (method_exists($result, 'get_response')) {
-                // Older/Alternative implementation
-                $response = $result->get_response();
-                $generated_content = $response['generatedcontent'] ?? '';
-            } else {
-                throw new \moodle_exception('error', 'core', '', 'AI Response object has unknown methods: ' . implode(', ', get_class_methods($result)));
+            // Check if the AI call was successful
+            if (!$result->get_success()) {
+                $errorcode = $result->get_errorcode();
+                $errormsg = $result->get_errormessage();
+                throw new \Exception('AI provider error (code: ' . $errorcode . '): ' . $errormsg);
+            }
+
+            // Get the generated content from the response data
+            $response_data = $result->get_response_data();
+            $generated_content = $response_data['generatedcontent'] ?? '';
+
+            if (empty($generated_content)) {
+                throw new \Exception('AI returned empty content. Response data keys: ' . implode(', ', array_keys($response_data)));
             }
 
             // Clean markdown if strictly formatted
@@ -114,23 +126,29 @@ Rules:
                     $ai_data = json_decode($matches[0], true);
                 }
                 if (!$ai_data || !isset($ai_data['sql'])) {
-                    throw new \moodle_exception('error', 'core', '', 'AI did not return valid JSON. Response: ' . substr($generated_content, 0, 100));
+                    throw new \Exception('AI did not return valid JSON. Response raw: ' . substr($generated_content, 0, 200));
                 }
             }
 
             // Safety check
             if (stripos(trim($ai_data['sql']), 'SELECT') !== 0) {
-                throw new \moodle_exception('error', 'core', '', 'AI generated a non-SELECT query.');
+                throw new \Exception('AI generated a non-SELECT query.');
             }
 
+            // Sanitize SQL: convert mdl_ prefix to {tablename} if AI used it
+            $sql = $ai_data['sql'];
+            $sql = preg_replace('/\bmdl_([a-z_]+)/', '{$1}', $sql);
+
             // Execute SQL
-            $results = $DB->get_records_sql($ai_data['sql']);
+            $results = $DB->get_records_sql($sql);
             $data = array_values($results);
 
             return [
-                'sql' => $ai_data['sql'],
+                'sql' => $sql,
                 'data' => json_encode($data),
-                'chart_type' => $ai_data['chart_type'] ?? 'table',
+                'chart_type' => $ai_data['chart_type'] ?? 'none',
+                'chart_label_column' => $ai_data['chart_label_column'] ?? '',
+                'chart_value_column' => $ai_data['chart_value_column'] ?? '',
                 'explanation' => $ai_data['explanation'] ?? 'Here is the report you requested.'
             ];
         } catch (\Throwable $e) {
@@ -151,8 +169,10 @@ Rules:
     {
         return new external_single_structure([
             'sql' => new external_value(PARAM_RAW, 'The generated SQL query'),
-            'data' => new external_value(PARAM_RAW, 'JSON encoded result data'), // Returning RAW JSON for flexibility
-            'chart_type' => new external_value(PARAM_TEXT, 'Suggested chart type'),
+            'data' => new external_value(PARAM_RAW, 'JSON encoded result data'),
+            'chart_type' => new external_value(PARAM_TEXT, 'Suggested chart type (bar, line, pie, doughnut, none)'),
+            'chart_label_column' => new external_value(PARAM_TEXT, 'Column name to use for chart labels', VALUE_DEFAULT, ''),
+            'chart_value_column' => new external_value(PARAM_TEXT, 'Column name to use for chart values', VALUE_DEFAULT, ''),
             'explanation' => new external_value(PARAM_TEXT, 'AI explanation')
         ]);
     }
