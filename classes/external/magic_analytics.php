@@ -88,10 +88,18 @@ Rules:
                 $full_prompt
             );
 
-            $manager = new \core_ai\manager();
+            $manager = \core\di::get(\core_ai\manager::class);
             $result = $manager->process_action($action);
-            $response = $result->get_response();
-            $generated_content = $response['generatedcontent'];
+
+            if (method_exists($result, 'get_generatedcontent')) {
+                $generated_content = $result->get_generatedcontent();
+            } elseif (method_exists($result, 'get_response')) {
+                // Older/Alternative implementation
+                $response = $result->get_response();
+                $generated_content = $response['generatedcontent'] ?? '';
+            } else {
+                throw new \moodle_exception('error', 'core', '', 'AI Response object has unknown methods: ' . implode(', ', get_class_methods($result)));
+            }
 
             // Clean markdown if strictly formatted
             $json_str = str_replace(['```json', '```'], '', $generated_content);
