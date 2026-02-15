@@ -1,0 +1,256 @@
+/* Smart Dashboard Dark Mode Styling */
+
+/* Import Font */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+/* --- Page-Level Overrides for Dark Mode & Full Width --- */
+body.path-local-smartdashboard {
+    background-color: #2b2d3e !important;
+    color: #e3e2e2;
+    font-family: "DM Sans", sans-serif;
+}
+
+/* Force full width and remove default Moodle padding/margins */
+body.path-local-smartdashboard #page-wrapper,
+body.path-local-smartdashboard #page,
+body.path-local-smartdashboard #page-content,
+body.path-local-smartdashboard #region-main-box,
+body.path-local-smartdashboard #region-main,
+body.path-local-smartdashboard .container-fluid,
+body.path-local-smartdashboard .container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Specific fix for Boost and other themes with drawers */
+body.path-local-smartdashboard .drawer-content {
+    background-color: #2b2d3e !important;
+    padding: 0 !important;
+}
+
+/* Hide breadcrumbs and unnecessary headers if possible/desired for "App feel",
+   but for now just ensure they don't force white backgrounds */
+body.path-local-smartdashboard .secondary-navigation {
+    background-color: #1a1d21 !important;
+    border-bottom: 1px solid #3e4152;
+    max-width: 100% !important;
+}
+
+/* Ensure our dashboard container takes available space */
+.path-local-smartdashboard .dashboard-container {
+    background-color: transparent;
+    color: #e3e2e2;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* Headings */
+.path-local-smartdashboard h1,
+.path-local-smartdashboard h2,
+.path-local-smartdashboard h3,
+.path-local-smartdashboard h4,
+.path-local-smartdashboard h5,
+.path-local-smartdashboard h6,
+.path-local-smartdashboard .dashboard-title {
+    color: #dbdbdc !important;
+    font-weight: 500;
+}
+
+.path-local-smartdashboard .text-muted {
+    color: #aeb0b5 !important;
+}
+
+/* Sidebar */
+.smartdashboard-sidebar {
+    background-color: #1a1d21;
+    border-right: 1px solid #3e4152;
+    height: 100%;
+    min-height: 80vh;
+    border-radius: 12px;
+}
+
+.smartdashboard-sidebar .nav-link {
+    color: #aeb0b5;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.smartdashboard-sidebar .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.smartdashboard-sidebar .nav-link.active {
+    color: #fff;
+    background-color: #3b82f6;
+    /* Accent Blue */
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.smartdashboard-sidebar .nav-link i {
+    width: 24px;
+    text-align: center;
+    margin-right: 8px;
+    opacity: 0.8;
+}
+
+/* Cards & Sections */
+.path-local-smartdashboard .card {
+    background-color: #2b2d3e;
+    border: 1px solid #3e4152;
+    border-radius: 12px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+    margin-bottom: 20px;
+}
+
+/* Nested cards (like course cards or section cards) */
+.path-local-smartdashboard .dashboard-section .card {
+    background-color: #323548;
+    border: none;
+}
+
+.path-local-smartdashboard .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid #3e4152;
+    color: #dbdbdc;
+    font-weight: 600;
+    padding: 15px 20px;
+}
+
+.path-local-smartdashboard .card-body {
+    padding: 20px;
+}
+
+/* Course Cards Specifics */
+.path-local-smartdashboard .course-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: #323548;
+}
+
+.path-local-smartdashboard .course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.path-local-smartdashboard .card-img-top-wrapper {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    background-color: #252836 !important;
+}
+
+/* Links */
+.path-local-smartdashboard a {
+    color: #60a5fa;
+}
+
+.path-local-smartdashboard a:hover {
+    color: #93c5fd;
+    text-decoration: none;
+}
+
+.path-local-smartdashboard .text-dark {
+    color: #e3e2e2 !important;
+}
+
+/* Forms & Inputs */
+.path-local-smartdashboard .form-select,
+.path-local-smartdashboard .form-control {
+    background-color: #1f222e;
+    border: 1px solid #3e4152;
+    color: #e3e2e2;
+    border-radius: 8px;
+}
+
+.path-local-smartdashboard .form-select:focus,
+.path-local-smartdashboard .form-control:focus {
+    background-color: #1f222e;
+    color: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+}
+
+/* Tables */
+.path-local-smartdashboard .table {
+    color: #e3e2e2;
+    --bs-table-bg: transparent;
+    --bs-table-color: #e3e2e2;
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+    --bs-table-border-color: #3e4152;
+}
+
+.path-local-smartdashboard .table thead th {
+    border-bottom: 2px solid #3e4152;
+    color: #aeb0b5;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 12px;
+}
+
+.path-local-smartdashboard .table td,
+.path-local-smartdashboard .table th {
+    border-color: #3e4152;
+    vertical-align: middle;
+}
+
+/* List Groups */
+.path-local-smartdashboard .list-group-item {
+    background-color: transparent;
+    border-color: #3e4152;
+    color: #e3e2e2;
+}
+
+/* Badges */
+.path-local-smartdashboard .badge.bg-light {
+    background-color: #3e4152 !important;
+    color: #e3e2e2 !important;
+}
+
+/* Alerts */
+.path-local-smartdashboard .alert {
+    background-color: #323548;
+    border-color: #3e4152;
+    color: #e3e2e2;
+}
+
+/* Utils */
+.path-local-smartdashboard .bg-white {
+    background-color: #323548 !important;
+    color: #e3e2e2 !important;
+}
+
+.path-local-smartdashboard .bg-light {
+    background-color: #252836 !important;
+    color: #e3e2e2 !important;
+}
+
+/* Buttons */
+.path-local-smartdashboard .btn-outline-secondary {
+    color: #aeb0b5;
+    border-color: #3e4152;
+}
+
+.path-local-smartdashboard .btn-outline-secondary:hover {
+    background-color: #3e4152;
+    color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .path-local-smartdashboard .dashboard-container {
+        padding-top: 10px;
+    }
+}
