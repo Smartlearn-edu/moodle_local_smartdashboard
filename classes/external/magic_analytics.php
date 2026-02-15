@@ -51,7 +51,7 @@ IMPORTANT RULES:
    - 'chart_label_column': The SQL alias/column name to use as chart labels (X-axis or pie segments). Only if chart_type is not 'none'.
    - 'chart_value_column': The SQL alias/column name to use as chart values (Y-axis or pie sizes). Only if chart_type is not 'none'.
 3. Do NOT wrap in markdown code blocks.
-4. SQL must be SELECT only. No INSERT, UPDATE, DELETE, DROP.
+4. **CRITICAL SECURITY RULE**: SQL MUST be a pure SELECT query ONLY. You are STRICTLY FORBIDDEN from generating any of the following: INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, REPLACE, GRANT, REVOKE, RENAME, EXEC, EXECUTE, CALL, LOAD DATA, INTO OUTFILE, INTO DUMPFILE, LOCK, UNLOCK, FLUSH, SET, PREPARE, DEALLOCATE. Do NOT use semicolons. Do NOT use SQL comments (-- or /* */). Any non-SELECT query WILL BE REJECTED by the server and will not execute.
 5. Limit results to 20 rows unless the user specifies otherwise.
 6. Use standard Moodle table names and column names. You know the Moodle database schema well.
 7. Make sure all column references in SELECT, WHERE, HAVING, and ORDER BY clauses come from properly JOINed tables.
