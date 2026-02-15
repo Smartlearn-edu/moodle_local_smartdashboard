@@ -1794,6 +1794,234 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
         }
     };
 
+    var MagicReports = {
+        chartInstance: null,
+        currentReport: null,
+
+        init: function () {
+            var self = this;
+            this.container = $('#section-magic');
+
+            // Generate Button
+            this.container.find('#btn-magic-run').off('click').on('click', function () {
+                var prompt = self.container.find('#magic-prompt').val();
+                if (prompt && prompt.trim()) {
+                    self.runQuery(prompt);
+                } else {
+                    Notification.addNotification({
+                        message: 'Please enter a question first.',
+                        type: 'warning'
+                    });
+                }
+            });
+
+            // Save Button
+            this.container.find('#btn-save-report').off('click').on('click', function () {
+                self.saveReport();
+            });
+
+            // Initial load of saved reports
+            this.loadSavedReports();
+        },
+
+        runQuery: function (prompt) {
+            var self = this;
+            var $btn = this.container.find('#btn-magic-run');
+            var originalText = $btn.html();
+
+            $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin me-2"></i> Thinking...');
+            $('#magic-results-area').hide();
+
+            Ajax.call([{
+                methodname: 'local_smartdashboard_get_magic_insight',
+                args: { prompt: prompt }
+            }])[0].done(function (response) {
+                $btn.prop('disabled', false).html(originalText);
+                self.renderResults(response);
+            }).fail(function (ex) {
+                $btn.prop('disabled', false).html(originalText);
+                Notification.exception(ex);
+            });
+        },
+
+        renderResults: function (response) {
+            var self = this;
+            $('#magic-results-area').fadeIn();
+
+            // Explanation & SQL
+            $('#magic-explanation').text(response.explanation);
+            $('#magic-sql-code').text(response.sql);
+
+            // Store current report context for saving
+            this.currentReport = {
+                sql: response.sql,
+                chart_type: response.chart_type,
+                title: $('#magic-prompt').val().substring(0, 50) + '...'
+            };
+
+            // Parse Data
+            var data = [];
+            try {
+                data = JSON.parse(response.data);
+            } catch (e) {
+                console.error('Failed to parse magic data', e);
+            }
+
+            // Render Table
+            var $table = $('#magic-table');
+            var $thead = $table.find('thead');
+            var $tbody = $table.find('tbody');
+            $thead.empty();
+            $tbody.empty();
+
+            if (data.length > 0) {
+                // Generate headers from first row keys
+                var keys = Object.keys(data[0]);
+                var headerHtml = '<tr>';
+                keys.forEach(function (k) {
+                    // Capitalize and replace underscores
+                    var displayKeys = k.charAt(0).toUpperCase() + k.slice(1).replace(/_/g, ' ');
+                    headerHtml += '<th>' + displayKeys + '</th>';
+                });
+                headerHtml += '</tr>';
+                $thead.append(headerHtml);
+
+                // Generate rows
+                data.forEach(function (row) {
+                    var rowHtml = '<tr>';
+                    keys.forEach(function (k) {
+                        var val = row[k] !== null ? row[k] : '-';
+                        rowHtml += '<td>' + val + '</td>';
+                    });
+                    rowHtml += '</tr>';
+                    $tbody.append(rowHtml);
+                });
+
+                // Render Chart if valid data exists
+                if (typeof ChartJS !== 'undefined') {
+                    self.renderChart(data, keys);
+                }
+            } else {
+                $tbody.append('<tr><td colspan="5" class="text-center text-muted">No results found.</td></tr>');
+                $('#magic-chart-container').hide();
+            }
+        },
+
+        renderChart: function (data, keys) {
+            // Simple heuristic: 1st string column = Label, 1st number column = Value
+            var labelKey = keys.find(function (k) { return isNaN(data[0][k]); });
+            var valueKey = keys.find(function (k) { return !isNaN(data[0][k]); });
+
+            var container = $('#magic-chart-container');
+
+            if (labelKey && valueKey) {
+                container.show();
+                var ctx = document.getElementById('magic-chart-canvas').getContext('2d');
+
+                // Destroy old instance if exists
+                if (this.chartInstance) {
+                    this.chartInstance.destroy();
+                }
+
+                var labels = data.map(function (d) { return d[labelKey]; });
+                var values = data.map(function (d) { return d[valueKey]; });
+
+                this.chartInstance = new ChartJS(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: valueKey.replace(/_/g, ' '),
+                            data: values,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e0e0e0' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#e0e0e0' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#e0e0e0' }
+                            }
+                        }
+                    }
+                });
+            } else {
+                container.hide();
+            }
+        },
+
+        saveReport: function () {
+            var self = this;
+            if (!this.currentReport) return;
+
+            // Simple browser prompt for title
+            var title = prompt("Enter a title for this report:", "My Magic Report");
+
+            if (title) {
+                Ajax.call([{
+                    methodname: 'local_smartdashboard_save_magic_report',
+                    args: {
+                        title: title,
+                        sql_query: this.currentReport.sql,
+                        chart_type: this.currentReport.chart_type
+                    }
+                }])[0].done(function () {
+                    Notification.addNotification({
+                        message: 'Report saved successfully!',
+                        type: 'success'
+                    });
+                    self.loadSavedReports();
+                }).fail(Notification.exception);
+            }
+        },
+
+        loadSavedReports: function () {
+            var $list = $('#saved-reports-list');
+            $list.html('<div class="text-center p-3 text-muted small"><i class="fa fa-spinner fa-spin"></i> Loading...</div>');
+
+            Ajax.call([{
+                methodname: 'local_smartdashboard_get_saved_reports',
+                args: {}
+            }])[0].done(function (reports) {
+                $list.empty();
+                if (reports.length === 0) {
+                    $list.append('<div class="p-3 text-center small text-muted">No saved reports yet.</div>');
+                } else {
+                    reports.forEach(function (r) {
+                        var itemHtml = '<a href="#" class="list-group-item list-group-item-action border-0 mb-1 rounded">';
+                        itemHtml += '<div class="d-flex w-100 justify-content-between align-items-center">';
+                        itemHtml += '<h6 class="mb-0 text-truncate" style="max-width: 80%;">' + r.title + '</h6>';
+                        itemHtml += '<small><i class="fa fa-bar-chart"></i></small></div>';
+                        itemHtml += '</a>';
+
+                        var $item = $(itemHtml);
+                        $item.on('click', function (e) {
+                            e.preventDefault();
+                            // Populate prompt and trigger run
+                            $('#magic-prompt').val(r.title); // Using title as prompt for now
+                            $('#btn-magic-run').click();
+                        });
+                        $list.append($item);
+                    });
+                }
+            });
+        }
+    };
+
     return {
         init: function () {
             var navLinks = $('#dashboard-sidebar-nav .nav-link');
@@ -1840,6 +2068,11 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                         if (!$('#section-settings').data('loaded')) {
                             DashboardSettings.init();
                             $('#section-settings').data('loaded', true);
+                        }
+                    } else if (targetId === 'section-magic') {
+                        if (!$('#section-magic').data('loaded')) {
+                            MagicReports.init();
+                            $('#section-magic').data('loaded', true);
                         }
                     }
                 }

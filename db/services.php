@@ -73,4 +73,26 @@ $functions = [
         'type'        => 'read',
         'ajax'        => true,
     ],
+    // --- Magic Reports (AI) ---
+    'local_smartdashboard_get_magic_insight' => [
+        'classname'   => 'local_smartdashboard\external\magic_analytics',
+        'methodname'  => 'get_magic_insight',
+        'description' => 'Get AI-generated insight and SQL query',
+        'type'        => 'read',
+        'ajax'        => true,
+    ],
+    'local_smartdashboard_save_magic_report' => [
+        'classname'   => 'local_smartdashboard\external\magic_analytics',
+        'methodname'  => 'save_report',
+        'description' => 'Save a custom magic report',
+        'type'        => 'write',
+        'ajax'        => true,
+    ],
+    'local_smartdashboard_get_saved_reports' => [
+        'classname'   => 'local_smartdashboard\external\magic_analytics',
+        'methodname'  => 'get_saved_reports',
+        'description' => 'Get list of saved magic reports',
+        'type'        => 'read',
+        'ajax'        => true,
+    ],
 ];
