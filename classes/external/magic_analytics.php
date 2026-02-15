@@ -33,6 +33,35 @@ class magic_analytics extends external_api
     }
 
     /**
+     * Helper to provide schema context for AI.
+     */
+    private static function get_schema_context()
+    {
+        return "You are a Moodle SQL expert. Generate a SQL query compatible with Moodle's database structure.
+Tables:
+- {course}: id, fullname, shortname, category
+- {user}: id, username, firstname, lastname, email, city, country, lastaccess, suspended, deleted
+- {role_assignments}: id, roleid (3=teacher, 5=student), contextid, userid
+- {context}: id, contextlevel, instanceid (joins context to course/module)
+- {enrol}: id, enrol (method), courseid
+- {user_enrolments}: id, enrolid, userid, status (0=active)
+- {course_completions}: id, course, userid, timecompleted
+- {grade_items}: id, courseid, itemname, itemtype, grademin, grademax
+- {grade_grades}: id, itemid, userid, finalgrade
+- {modules}: id, name (assignment, quiz etc)
+- {course_modules}: id, course, module, instance
+
+Rules:
+1. Use {table_name} syntax.
+2. Return ONLY valid JSON with keys: 'sql', 'explanation', 'chart_type' (bar, line, pie, table).
+3. Do not include markdown formatting (```json).
+4. SQL must be SELECT only. No DELETE, UPDATE, DROP.
+5. Limit results to 20 rows unless specified.
+6. For 'completion rates', use logic: (completed / enrolled) * 100.
+";
+    }
+
+    /**
      * Simulates AI analysis and returns a SQL query + results.
      */
     public static function get_magic_insight($prompt)
@@ -44,37 +73,62 @@ class magic_analytics extends external_api
         self::validate_context($context);
         require_capability('moodle/site:config', $context);
 
-        // --- MOCK AI LOGIC ---
-        // In a real implementation, we would call an AI API here.
-        // For now, we return a hardcoded response for "Low Completion Rates".
+        $system_prompt = self::get_schema_context();
+        $full_prompt = $system_prompt . "\n\nUser Question: " . $prompt;
 
-        $explanation = "I've analyzed enrollment and completion data to find courses with the lowest completion rates. Here are the bottom 5.";
+        try {
+            // Check if AI subsystem exists (Moodle 4.1+)
+            if (!class_exists('\core_ai\manager')) {
+                throw new \moodle_exception('error', 'core', '', 'Moodle AI subsystem not found.');
+            }
 
-        // This query calculates completion rate = (completed / enrolled) * 100
-        $sql = "SELECT c.fullname, 
-                       COUNT(DISTINCT ue.userid) AS enrolled,
-                       SUM(CASE WHEN cc.timecompleted > 0 THEN 1 ELSE 0 END) AS completed,
-                       ROUND((SUM(CASE WHEN cc.timecompleted > 0 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(DISTINCT ue.userid), 0)), 1) AS completion_rate
-                FROM {course} c
-                JOIN {enrol} e ON e.courseid = c.id
-                JOIN {user_enrolments} ue ON ue.enrolid = e.id
-                LEFT JOIN {course_completions} cc ON cc.course = c.id AND cc.userid = ue.userid
-                WHERE c.id != 1
-                GROUP BY c.id, c.fullname
-                HAVING COUNT(DISTINCT ue.userid) > 0
-                ORDER BY completion_rate ASC, enrolled DESC
-                LIMIT 5";
+            $action = new \core_ai\aiactions\generate_text(
+                contextid: $context->id,
+                prompt: $full_prompt
+            );
 
-        // Execute the query safely
-        $results = $DB->get_records_sql($sql);
-        $data = array_values($results); // Remove keys
+            $result = \core_ai\manager::process_action($action);
+            $response = $result->get_response();
+            $generated_content = $response['generatedcontent'];
 
-        return [
-            'sql' => $sql,
-            'data' => json_encode($data),
-            'chart_type' => 'bar',
-            'explanation' => $explanation
-        ];
+            // Clean markdown if strictly formatted
+            $json_str = str_replace(['```json', '```'], '', $generated_content);
+            $ai_data = json_decode($json_str, true);
+
+            if (!$ai_data || !isset($ai_data['sql'])) {
+                // If JSON fails, try to extract it from text
+                if (preg_match('/\{.*\}/s', $json_str, $matches)) {
+                    $ai_data = json_decode($matches[0], true);
+                }
+                if (!$ai_data || !isset($ai_data['sql'])) {
+                    throw new \moodle_exception('error', 'core', '', 'AI did not return valid JSON. Response: ' . substr($generated_content, 0, 100));
+                }
+            }
+
+            // Safety check
+            if (stripos(trim($ai_data['sql']), 'SELECT') !== 0) {
+                throw new \moodle_exception('error', 'core', '', 'AI generated a non-SELECT query.');
+            }
+
+            // Execute SQL
+            $results = $DB->get_records_sql($ai_data['sql']);
+            $data = array_values($results);
+
+            return [
+                'sql' => $ai_data['sql'],
+                'data' => json_encode($data),
+                'chart_type' => $ai_data['chart_type'] ?? 'table',
+                'explanation' => $ai_data['explanation'] ?? 'Here is the report you requested.'
+            ];
+        } catch (\Exception $e) {
+            // Return error as a result so UI handles it gracefully
+            return [
+                'sql' => '-- Error: ' . $e->getMessage(),
+                'data' => '[]',
+                'chart_type' => 'table',
+                'explanation' => 'Failed to generate report: ' . $e->getMessage()
+            ];
+        }
     }
 
     /**
@@ -182,5 +236,43 @@ class magic_analytics extends external_api
                 'sql_query' => new external_value(PARAM_RAW, 'The SQL')
             ])
         );
+    }
+
+    /**
+     * Parameters for delete_report.
+     */
+    public static function delete_report_parameters()
+    {
+        return new external_function_parameters([
+            'reportid' => new external_value(PARAM_INT, 'The ID of the report to delete')
+        ]);
+    }
+
+    /**
+     * Deletes a saved magic report.
+     */
+    public static function delete_report($reportid)
+    {
+        global $DB;
+
+        $context = context_system::instance();
+        self::validate_context($context);
+        require_capability('moodle/site:config', $context);
+
+        if (!$DB->record_exists('local_smartdashboard_reports', ['id' => $reportid])) {
+            throw new \moodle_exception('invalidrecord', 'error', '', 'Report not found');
+        }
+
+        $DB->delete_records('local_smartdashboard_reports', ['id' => $reportid]);
+
+        return true;
+    }
+
+    /**
+     * Returns for delete_report.
+     */
+    public static function delete_report_returns()
+    {
+        return new external_value(PARAM_BOOL, 'True on success');
     }
 }

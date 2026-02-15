@@ -1989,7 +1989,24 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             }
         },
 
+        deleteReport: function (id, title) {
+            var self = this;
+            if (confirm('Are you sure you want to delete report: "' + title + '"?')) {
+                Ajax.call([{
+                    methodname: 'local_smartdashboard_delete_magic_report',
+                    args: { reportid: id }
+                }])[0].done(function () {
+                    Notification.addNotification({
+                        message: 'Report deleted.',
+                        type: 'info'
+                    });
+                    self.loadSavedReports();
+                }).fail(Notification.exception);
+            }
+        },
+
         loadSavedReports: function () {
+            var self = this;
             var $list = $('#saved-reports-list');
             $list.html('<div class="text-center p-3 text-muted small"><i class="fa fa-spinner fa-spin"></i> Loading...</div>');
 
@@ -2002,19 +2019,30 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                     $list.append('<div class="p-3 text-center small text-muted">No saved reports yet.</div>');
                 } else {
                     reports.forEach(function (r) {
-                        var itemHtml = '<a href="#" class="list-group-item list-group-item-action border-0 mb-1 rounded">';
-                        itemHtml += '<div class="d-flex w-100 justify-content-between align-items-center">';
-                        itemHtml += '<h6 class="mb-0 text-truncate" style="max-width: 80%;">' + r.title + '</h6>';
-                        itemHtml += '<small><i class="fa fa-bar-chart"></i></small></div>';
-                        itemHtml += '</a>';
+                        var itemHtml = '<div class="list-group-item list-group-item-action border-0 mb-1 rounded d-flex justify-content-between align-items-center bg-light" style="cursor: pointer;">';
+                        itemHtml += '<div class="text-truncate flex-grow-1 user-select-none report-item-click" title="' + r.title + '">';
+                        itemHtml += '<h6 class="mb-0 text-truncate">' + r.title + '</h6>';
+                        itemHtml += '<small class="text-muted"><i class="fa fa-bar-chart me-1"></i> Saved Report</small></div>';
+
+                        itemHtml += '<button class="btn btn-sm btn-link text-danger p-0 delete-report-btn ms-2" title="Delete Report">';
+                        itemHtml += '<i class="fa fa-trash"></i>';
+                        itemHtml += '</button>';
+                        itemHtml += '</div>';
 
                         var $item = $(itemHtml);
-                        $item.on('click', function (e) {
+
+                        $item.find('.report-item-click').on('click', function (e) {
                             e.preventDefault();
-                            // Populate prompt and trigger run
-                            $('#magic-prompt').val(r.title); // Using title as prompt for now
+                            $('#magic-prompt').val(r.title);
                             $('#btn-magic-run').click();
                         });
+
+                        $item.find('.delete-report-btn').on('click', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            self.deleteReport(r.id, r.title);
+                        });
+
                         $list.append($item);
                     });
                 }

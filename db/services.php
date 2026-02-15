@@ -95,4 +95,11 @@ $functions = [
         'type'        => 'read',
         'ajax'        => true,
     ],
+    'local_smartdashboard_delete_magic_report' => [
+        'classname'   => 'local_smartdashboard\external\magic_analytics',
+        'methodname'  => 'delete_report',
+        'description' => 'Delete a saved magic report',
+        'type'        => 'write',
+        'ajax'        => true,
+    ],
 ];
