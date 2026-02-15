@@ -88,6 +88,9 @@ Rules:
                 $full_prompt
             );
 
+            if (!class_exists('\core\di')) {
+                throw new \moodle_exception('error', 'core', '', 'Dependency Injection not found.');
+            }
             $manager = \core\di::get(\core_ai\manager::class);
             $result = $manager->process_action($action);
 
@@ -130,10 +133,10 @@ Rules:
                 'chart_type' => $ai_data['chart_type'] ?? 'table',
                 'explanation' => $ai_data['explanation'] ?? 'Here is the report you requested.'
             ];
-        } catch (\Exception $e) {
-            // Return error as a result so UI handles it gracefully
+        } catch (\Throwable $e) {
+            $debug = get_class($e) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString();
             return [
-                'sql' => '-- Error: ' . $e->getMessage(),
+                'sql' => "/* ERROR:\n" . $debug . "\n*/",
                 'data' => '[]',
                 'chart_type' => 'table',
                 'explanation' => 'Failed to generate report: ' . $e->getMessage()
