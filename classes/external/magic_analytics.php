@@ -66,7 +66,7 @@ Rules:
      */
     public static function get_magic_insight($prompt)
     {
-        global $DB;
+        global $DB, $USER;
 
         // Security check: Only admins for now.
         $context = context_system::instance();
@@ -83,11 +83,13 @@ Rules:
             }
 
             $action = new \core_ai\aiactions\generate_text(
-                contextid: $context->id,
-                prompt: $full_prompt
+                $context->id,
+                $USER->id,
+                $full_prompt
             );
 
-            $result = \core_ai\manager::process_action($action);
+            $manager = new \core_ai\manager();
+            $result = $manager->process_action($action);
             $response = $result->get_response();
             $generated_content = $response['generatedcontent'];
 
