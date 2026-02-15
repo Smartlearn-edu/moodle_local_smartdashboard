@@ -23,7 +23,10 @@
  */
 
 /**
- * Adds the Smart Dashboard link to Moodle's navigation drawer (flat navigation).
+ * Adds the Smart Dashboard link to Moodle's navigation.
+ *
+ * Adds both a navigation drawer entry and injects JS to add
+ * a link to the primary navigation bar in Moodle 4.x Boost themes.
  *
  * Only visible to users with the local/smartdashboard:view capability
  * (teachers, managers) or site admins.
@@ -32,6 +35,8 @@
  */
 function local_smartdashboard_extend_navigation(global_navigation $navigation)
 {
+    global $PAGE;
+
     if (!isloggedin() || isguestuser()) {
         return;
     }
@@ -45,6 +50,7 @@ function local_smartdashboard_extend_navigation(global_navigation $navigation)
 
     $url = new moodle_url('/local/smartdashboard/index.php');
 
+    // 1. Add to navigation drawer (flat navigation).
     $node = $navigation->add(
         get_string('pluginname', 'local_smartdashboard'),
         $url,
@@ -57,77 +63,51 @@ function local_smartdashboard_extend_navigation(global_navigation $navigation)
     if ($node) {
         $node->showinflatnavigation = true;
     }
-}
 
-/**
- * Injects the Smart Dashboard link into the primary navigation bar
- * for Moodle 4.x Boost themes using JavaScript.
- *
- * This is needed because Moodle 4.x does not provide a PHP API to add
- * items to the top primary navigation bar programmatically.
- *
- * @return string HTML/JS to inject into the page.
- */
-function local_smartdashboard_before_standard_top_of_body_html()
-{
-    global $PAGE;
-
-    if (!isloggedin() || isguestuser()) {
-        return '';
-    }
-
-    $context = context_system::instance();
-
-    if (!is_siteadmin() && !has_capability('local/smartdashboard:view', $context)) {
-        return '';
-    }
-
-    $url = new moodle_url('/local/smartdashboard/index.php');
-    $linktext = get_string('pluginname', 'local_smartdashboard');
-    $currenturl = $PAGE->url->out(false);
+    // 2. Inject JS to add link to the primary navigation bar (Moodle 4.x Boost).
     $dashboardurl = $url->out(false);
+    $linktext = get_string('pluginname', 'local_smartdashboard');
 
-    // Check if we're currently on the dashboard page for active state.
-    $isactive = (strpos($currenturl, '/local/smartdashboard/') !== false);
-    $activeclass = $isactive ? ' active' : '';
+    $jscode = '
+        document.addEventListener("DOMContentLoaded", function() {
+            var primaryNav = document.querySelector(".primary-navigation .moremenu ul[role=\'menubar\']");
+            if (!primaryNav) {
+                primaryNav = document.querySelector("ul.nav.more-nav.navbar-nav");
+            }
+            if (!primaryNav) {
+                primaryNav = document.querySelector(".primary-navigation ul");
+            }
+            if (primaryNav) {
+                var existingLink = primaryNav.querySelector("a[href*=\'/local/smartdashboard/\']");
+                if (!existingLink) {
+                    var li = document.createElement("li");
+                    li.className = "nav-item";
+                    li.setAttribute("data-key", "local_smartdashboard");
+                    li.setAttribute("role", "none");
 
-    return '<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Find the primary navigation list.
-        var primaryNav = document.querySelector(".primary-navigation .moremenu ul[role=\"menubar\"]");
-        if (!primaryNav) {
-            primaryNav = document.querySelector("ul.nav.more-nav.navbar-nav");
-        }
-        if (!primaryNav) {
-            primaryNav = document.querySelector(".primary-navigation ul");
-        }
-        if (primaryNav) {
-            // Check if link already exists.
-            var existingLink = primaryNav.querySelector("a[href*=\"/local/smartdashboard/\"]");
-            if (!existingLink) {
-                var li = document.createElement("li");
-                li.className = "nav-item";
-                li.setAttribute("data-key", "local_smartdashboard");
-                li.setAttribute("role", "none");
+                    var a = document.createElement("a");
+                    a.className = "nav-link";
+                    a.setAttribute("role", "menuitem");
+                    a.href = "' . $dashboardurl . '";
+                    a.textContent = "' . $linktext . '";
+                    a.setAttribute("tabindex", "-1");
 
-                var a = document.createElement("a");
-                a.className = "nav-link' . $activeclass . '";
-                a.setAttribute("role", "menuitem");
-                a.href = "' . $dashboardurl . '";
-                a.textContent = "' . $linktext . '";
-                a.setAttribute("tabindex", "-1");
+                    li.appendChild(a);
 
-                li.appendChild(a);
-
-                // Insert before the "More" menu if it exists, otherwise append.
-                var moreMenu = primaryNav.querySelector("li.nav-item.dropdown");
-                if (moreMenu) {
-                    primaryNav.insertBefore(li, moreMenu);
-                } else {
-                    primaryNav.appendChild(li);
+                    var moreMenu = primaryNav.querySelector("li.nav-item.dropdown");
+                    if (moreMenu) {
+                        primaryNav.insertBefore(li, moreMenu);
+                    } else {
+                        primaryNav.appendChild(li);
+                    }
                 }
             }
-        }
-    });
-    </script>';
+        });
+    ';
+
+    try {
+        $PAGE->requires->js_init_code($jscode);
+    } catch (Exception $e) {
+        // Silently fail if $PAGE is not ready.
+    }
 }

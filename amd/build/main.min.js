@@ -1116,8 +1116,21 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e0e0e0' }
+                        }
+                    },
                     scales: {
-                        y: { beginAtZero: true }
+                        x: {
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: 'rgba(255,255,255,0.08)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: 'rgba(255,255,255,0.08)' }
+                        }
                     }
                 }
             });
@@ -1151,7 +1164,12 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e0e0e0' }
+                        }
+                    }
                 }
             });
         },
@@ -1463,8 +1481,15 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'right' },
-                        title: { display: true, text: 'Revenue Distribution' }
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#e0e0e0' }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Revenue Distribution',
+                            color: '#ffffff'
+                        }
                     }
                 }
             });
@@ -1509,21 +1534,35 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        title: { display: true, text: 'Students & Revenue per Category' }
+                        legend: {
+                            labels: { color: '#e0e0e0' }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Students & Revenue per Category',
+                            color: '#ffffff'
+                        }
                     },
                     scales: {
+                        x: {
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: 'rgba(255,255,255,0.08)' }
+                        },
                         y: {
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            title: { display: true, text: 'Students' }
+                            title: { display: true, text: 'Students', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' },
+                            grid: { color: 'rgba(255,255,255,0.08)' }
                         },
                         y1: {
                             type: 'linear',
                             display: true,
                             position: 'right',
                             grid: { drawOnChartArea: false },
-                            title: { display: true, text: 'Revenue' }
+                            title: { display: true, text: 'Revenue', color: '#e0e0e0' },
+                            ticks: { color: '#e0e0e0' }
                         }
                     }
                 }

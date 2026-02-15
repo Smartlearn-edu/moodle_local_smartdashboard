@@ -49,7 +49,7 @@ body.path-local-smartdashboard .secondary-navigation {
     width: 100%;
 }
 
-/* Headings */
+/* Headings — use bright white for readability on dark bg */
 .path-local-smartdashboard h1,
 .path-local-smartdashboard h2,
 .path-local-smartdashboard h3,
@@ -57,12 +57,19 @@ body.path-local-smartdashboard .secondary-navigation {
 .path-local-smartdashboard h5,
 .path-local-smartdashboard h6,
 .path-local-smartdashboard .dashboard-title {
-    color: #dbdbdc !important;
+    color: #ffffff !important;
     font-weight: 500;
 }
 
+/* Subtitle / muted text — brighter for readability */
 .path-local-smartdashboard .text-muted {
-    color: #aeb0b5 !important;
+    color: #94d2bd !important;
+}
+
+/* Form labels — use a bright, visible color */
+.path-local-smartdashboard .form-label {
+    color: #a8dadc !important;
+    font-weight: 600;
 }
 
 /* Sidebar */
@@ -124,7 +131,7 @@ body.path-local-smartdashboard .secondary-navigation {
 .path-local-smartdashboard .card-header {
     background-color: transparent;
     border-bottom: 1px solid #3e4152;
-    color: #dbdbdc;
+    color: #ffffff;
     font-weight: 600;
     padding: 15px 20px;
 }
@@ -190,9 +197,10 @@ body.path-local-smartdashboard .secondary-navigation {
     --bs-table-border-color: #3e4152;
 }
 
+/* Table headers — bright golden/yellow for high contrast on dark */
 .path-local-smartdashboard .table thead th {
-    border-bottom: 2px solid #3e4152;
-    color: #aeb0b5;
+    border-bottom: 2px solid #4a4f65;
+    color: #fbbf24 !important;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.85rem;
@@ -200,10 +208,29 @@ body.path-local-smartdashboard .secondary-navigation {
     padding: 12px;
 }
 
+/* Override table-light for dark mode — use a dark blue-grey instead of white */
+.path-local-smartdashboard .table-light,
+.path-local-smartdashboard thead.table-light,
+.path-local-smartdashboard .table-light th,
+.path-local-smartdashboard thead.table-light th {
+    --bs-table-bg: #1e2233 !important;
+    --bs-table-color: #fbbf24 !important;
+    background-color: #1e2233 !important;
+    color: #fbbf24 !important;
+    border-color: #4a4f65 !important;
+}
+
 .path-local-smartdashboard .table td,
 .path-local-smartdashboard .table th {
     border-color: #3e4152;
     vertical-align: middle;
+}
+
+/* Dynamically generated thead bg-light override */
+.path-local-smartdashboard thead.bg-light,
+.path-local-smartdashboard thead.bg-light th {
+    background-color: #1e2233 !important;
+    color: #fbbf24 !important;
 }
 
 /* List Groups */
@@ -246,6 +273,18 @@ body.path-local-smartdashboard .secondary-navigation {
 .path-local-smartdashboard .btn-outline-secondary:hover {
     background-color: #3e4152;
     color: #fff;
+}
+
+/* Card header bg-white fix — force dark for chart section headers */
+.path-local-smartdashboard .card-header.bg-white {
+    background-color: #323548 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+/* Chart section heading text override */
+.path-local-smartdashboard .card-header h6 {
+    color: #ffffff !important;
 }
 
 /* Responsive */
