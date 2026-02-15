@@ -15,17 +15,23 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data.
+ * Spanish language strings for Smart Dashboard.
  *
  * @package     local_smartdashboard
- * @copyright   2025 Mohammad Nabil <mohammad@smartlearn.education>
+ * @copyright   2026 Mohammad Nabil <mohammad@smartlearn.education>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'local_smartdashboard';
-$plugin->version   = 2026021506;
-$plugin->requires  = 2022041900; // Moodle 4.0
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.0.0';
+$string['pluginname'] = 'Panel Inteligente';
+$string['smartdashboard:view'] = 'Ver el Panel Inteligente';
+$string['mycourses'] = 'Mis Cursos';
+$string['nocourses'] = 'Aún no estás impartiendo ningún curso.';
+$string['gotocourse'] = 'Ir al Curso';
+$string['students'] = 'estudiantes';
+$string['activities'] = 'Actividades';
+$string['needsgrading'] = 'Entrega(s) por calificar';
+$string['section_overview'] = 'Visión General';
+$string['section_grading'] = 'Calificaciones';
+$string['section_progress'] = 'Progreso del Estudiante';
+$string['section_analytics'] = 'Analítica';
+$string['section_settings'] = 'Configuración';
