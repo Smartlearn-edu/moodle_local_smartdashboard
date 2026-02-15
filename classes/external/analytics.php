@@ -66,7 +66,8 @@ class analytics extends external_api
             'categoryid' => new external_value(\PARAM_INT, 'Filter by Category ID', \VALUE_DEFAULT, 0),
             'fromdate' => new external_value(\PARAM_INT, 'From Date Timestamp', \VALUE_DEFAULT, 0),
             'todate' => new external_value(\PARAM_INT, 'To Date Timestamp', \VALUE_DEFAULT, 0),
-            'payment_mode' => new external_value(\PARAM_ALPHA, 'Payment calculation mode: actual or estimated', \VALUE_DEFAULT, 'actual')
+            'payment_mode' => new external_value(\PARAM_ALPHA, 'Payment calculation mode: actual or estimated', \VALUE_DEFAULT, 'actual'),
+            'gateway' => new external_value(\PARAM_TEXT, 'Filter by payment gateway (empty = all)', \VALUE_DEFAULT, '')
         ]);
     }
 
@@ -553,7 +554,7 @@ class analytics extends external_api
     /**
      * Get payment analytics data
      */
-    public static function get_payment_analytics($categoryid = 0, $fromdate = 0, $todate = 0, $payment_mode = 'actual')
+    public static function get_payment_analytics($categoryid = 0, $fromdate = 0, $todate = 0, $payment_mode = 'actual', $gateway = '')
     {
         global $DB, $USER;
 
@@ -561,10 +562,12 @@ class analytics extends external_api
             'categoryid' => $categoryid,
             'fromdate' => $fromdate,
             'todate' => $todate,
-            'payment_mode' => $payment_mode
+            'payment_mode' => $payment_mode,
+            'gateway' => $gateway
         ]);
 
         $payment_mode = $params['payment_mode'];
+        $gateway = trim($params['gateway']);
 
         $context = \context_system::instance();
         if (!has_capability('moodle/site:config', $context) && !has_capability('moodle/course:create', $context) && !is_siteadmin()) {
@@ -613,12 +616,25 @@ class analytics extends external_api
         $enrol_instances = $DB->get_records_sql($sql, $params);
 
         if (empty($enrol_instances)) {
+            // Still fetch available gateways even if no enrol instances
+            $available_gateways = [];
+            if ($dbman->table_exists('payments')) {
+                try {
+                    $gw_records = $DB->get_records_sql("SELECT DISTINCT gateway FROM {payments} WHERE gateway IS NOT NULL AND gateway != '' ORDER BY gateway");
+                    foreach ($gw_records as $gw) {
+                        $available_gateways[] = ['name' => $gw->gateway];
+                    }
+                } catch (\Exception $e) {
+                    // Ignore.
+                }
+            }
             return [
                 'total_students' => 0,
                 'total_revenue' => 0,
                 'currency' => 'USD', // Default
                 'categories' => [],
-                'courses' => []
+                'courses' => [],
+                'gateways' => $available_gateways
             ];
         }
 
@@ -652,7 +668,7 @@ class analytics extends external_api
             try {
                 list($itemsql, $itemparams) = $DB->get_in_or_equal($enrolids, SQL_PARAMS_NAMED, 'item');
 
-                $psql = "SELECT p.id, p.userid, p.amount, p.currency, p.timecreated, p.itemid, p.component
+                $psql = "SELECT p.id, p.userid, p.amount, p.currency, p.timecreated, p.itemid, p.component, p.gateway
                            FROM {payments} p
                           WHERE p.itemid $itemsql";
 
@@ -663,6 +679,10 @@ class analytics extends external_api
                 if ($todate > 0) {
                     $psql .= " AND p.timecreated <= :todate";
                     $itemparams['todate'] = $todate;
+                }
+                if (!empty($gateway)) {
+                    $psql .= " AND p.gateway = :gateway";
+                    $itemparams['gateway'] = $gateway;
                 }
 
                 $all_payments = $DB->get_records_sql($psql, $itemparams);
@@ -833,12 +853,26 @@ class analytics extends external_api
         }
         unset($cs);
 
+        // Fetch available gateways for the filter dropdown
+        $available_gateways = [];
+        if ($payments_table_exists) {
+            try {
+                $gw_records = $DB->get_records_sql("SELECT DISTINCT gateway FROM {payments} WHERE gateway IS NOT NULL AND gateway != '' ORDER BY gateway");
+                foreach ($gw_records as $gw) {
+                    $available_gateways[] = ['name' => $gw->gateway];
+                }
+            } catch (\Exception $e) {
+                // Ignore.
+            }
+        }
+
         return [
             'total_students' => $total_students,
             'total_revenue' => (float)$total_revenue,
             'currency' => $currency,
             'categories' => array_values($category_stats),
-            'courses' => array_values($course_stats)
+            'courses' => array_values($course_stats),
+            'gateways' => $available_gateways
         ];
     }
 
@@ -972,6 +1006,11 @@ class analytics extends external_api
                             'currency' => new external_value(\PARAM_TEXT, 'Currency code')
                         ])
                     )
+                ])
+            ),
+            'gateways' => new external_multiple_structure(
+                new external_single_structure([
+                    'name' => new external_value(\PARAM_TEXT, 'Gateway name')
                 ])
             )
         ]);

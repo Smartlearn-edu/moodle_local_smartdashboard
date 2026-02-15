@@ -1233,7 +1233,8 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             this.allCategories = []; // Store all categories for hierarchy
             this.filters = {
                 categoryid: 0,
-                time: 'all'
+                time: 'all',
+                gateway: ''
             };
             var self = this;
             // Add "Load Data" button in the filter row
@@ -1330,6 +1331,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             }
 
             this.filters.time = this.container.find('#payment-filter-time').val();
+            this.filters.gateway = this.container.find('#payment-filter-gateway').val() || '';
         },
 
         populateFilters: function () {
@@ -1407,14 +1409,34 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                     categoryid: this.filters.categoryid,
                     fromdate: from,
                     todate: to,
-                    payment_mode: paymentMode
+                    payment_mode: paymentMode,
+                    gateway: this.filters.gateway
                 }
             }])[0].done(function (response) {
+                self.populateGateways(response.gateways || []);
                 self.render(response);
             }).fail(function (ex) {
                 Notification.exception(ex);
                 self.container.find('#payment-total-revenue').text('Error');
             });
+        },
+
+        populateGateways: function (gateways) {
+            var $select = this.container.find('#payment-filter-gateway');
+            var currentVal = $select.val();
+            // Only repopulate if empty (first load) to avoid resetting user selection
+            if ($select.find('option').length <= 1) {
+                $select.html('<option value="">All Gateways</option>');
+                gateways.forEach(function (gw) {
+                    var name = gw.name;
+                    var label = name.charAt(0).toUpperCase() + name.slice(1);
+                    $select.append('<option value="' + name + '">' + label + '</option>');
+                });
+                // Restore previous selection if it still exists
+                if (currentVal) {
+                    $select.val(currentVal);
+                }
+            }
         },
 
         render: function (data) {
