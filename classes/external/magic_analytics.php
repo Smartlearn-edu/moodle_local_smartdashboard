@@ -130,17 +130,76 @@ Example output:
                 }
             }
 
-            // Safety check
-            if (stripos(trim($ai_data['sql']), 'SELECT') !== 0) {
-                throw new \Exception('AI generated a non-SELECT query.');
+            // ===== MULTI-LAYER SQL SAFETY VALIDATION =====
+            // This is critical: AI-generated SQL must NEVER modify the database.
+
+            $raw_sql = trim($ai_data['sql']);
+
+            // LAYER 1: Must start with SELECT
+            if (stripos($raw_sql, 'SELECT') !== 0) {
+                throw new \Exception('Security: Query must start with SELECT. Rejected.');
+            }
+
+            // LAYER 2: Block ALL dangerous SQL keywords using word-boundary matching
+            // Using \b word boundaries to avoid false positives (e.g., "selected", "updated_at")
+            $dangerous_keywords = [
+                'INSERT',
+                'UPDATE',
+                'DELETE',
+                'DROP',
+                'ALTER',
+                'TRUNCATE',
+                'CREATE',
+                'REPLACE',
+                'GRANT',
+                'REVOKE',
+                'RENAME',
+                'EXEC',
+                'EXECUTE',
+                'CALL',
+                'LOAD\s+DATA',
+                'INTO\s+OUTFILE',
+                'INTO\s+DUMPFILE',
+                'LOCK\s+TABLES?',
+                'UNLOCK\s+TABLES?',
+                'FLUSH',
+                'RESET',
+                'PURGE',
+                'HANDLER',
+                'SET\s+',
+                'PREPARE',
+                'DEALLOCATE',
+            ];
+            foreach ($dangerous_keywords as $keyword) {
+                // Word boundary check: \b ensures we match whole keywords, not substrings
+                if (preg_match('/\b' . $keyword . '\b/i', $raw_sql)) {
+                    throw new \Exception('Security: Forbidden SQL keyword detected (' . $keyword . '). Only SELECT queries are allowed.');
+                }
+            }
+
+            // LAYER 3: Block semicolons to prevent multi-statement injection
+            // (e.g., "SELECT 1; DROP TABLE users")
+            if (strpos($raw_sql, ';') !== false) {
+                throw new \Exception('Security: Semicolons are not allowed. Only single SELECT statements permitted.');
+            }
+
+            // LAYER 4: Block inline comments that could be used for obfuscation
+            // e.g., "SEL/**/ECT ... ; DR/**/OP TABLE" or "SELECT 1 -- ; DROP TABLE"
+            if (preg_match('/\/\*/', $raw_sql) || preg_match('/--/', $raw_sql)) {
+                throw new \Exception('Security: SQL comments (/* */ or --) are not allowed.');
+            }
+
+            // LAYER 5: Block access to system/metadata tables that could leak sensitive info
+            if (preg_match('/\b(information_schema|mysql|performance_schema|sys)\b/i', $raw_sql)) {
+                throw new \Exception('Security: Access to system tables is not allowed.');
             }
 
             // Sanitize SQL: convert mdl_ prefix to {tablename} if AI used it
-            $sql = $ai_data['sql'];
+            $sql = $raw_sql;
             $sql = preg_replace('/\bmdl_([a-z_]+)/', '{$1}', $sql);
 
-            // Execute SQL
-            $results = $DB->get_records_sql($sql);
+            // Execute SQL using Moodle's read-only method (additional safety net)
+            $results = $DB->get_records_sql($sql, null, 0, 1000);
             $data = array_values($results);
 
             return [
