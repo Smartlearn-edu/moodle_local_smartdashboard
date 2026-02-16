@@ -46,16 +46,20 @@
                             <i class="fa fa-bar-chart"></i> <span class="nav-text">{{#str}}section_analytics, local_smartdashboard{{/str}}</span>
                         </a>
                     </li>
+                    {{#showpayment}}
                     <li class="nav-item">
                         <a class="nav-link" href="#" data-target="section-payments">
                             <i class="fa fa-money"></i> <span class="nav-text">Payments</span>
                         </a>
                     </li>
+                    {{/showpayment}}
+                    {{#showmagic}}
                     <li class="nav-item">
                         <a class="nav-link" href="#" data-target="section-magic">
                             <i class="fa fa-magic"></i> <span class="nav-text">Magic Reports</span>
                         </a>
                     </li>
+                    {{/showmagic}}
                      <li class="nav-item mt-4">
                         <a class="nav-link" href="#" data-target="section-settings">
                             <i class="fa fa-cog"></i> <span class="nav-text">{{#str}}section_settings, local_smartdashboard{{/str}}</span>
@@ -380,6 +384,7 @@
                 </div>
                  
                 <!-- Payment Analytics Section -->
+                {{#showpayment}}
                 <div id="section-payments" class="dashboard-section d-none">
                     <div class="card shadow-sm border-0 mb-4 animate__animated animate__fadeIn">
                         <div class="card-body">
@@ -520,9 +525,11 @@
                         </div>
                     </div>
                 </div>
+                {{/showpayment}}
 
                  <!-- Settings Section -->
                 <!-- Magic Reports Section -->
+                {{#showmagic}}
                 <div id="section-magic" class="dashboard-section d-none">
                     <div class="row mb-3">
                         <div class="col-12">
@@ -603,6 +610,7 @@
                         </div>
                     </div>
                 </div>
+                {{/showmagic}}
 
                 <div id="section-settings" class="dashboard-section d-none">
                     <div class="card shadow-sm border-0 mb-4 animate__animated animate__fadeIn">

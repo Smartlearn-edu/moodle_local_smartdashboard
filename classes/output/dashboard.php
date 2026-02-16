@@ -225,6 +225,24 @@ class dashboard implements renderable, templatable
         // Determine if sidebar should be shown (Admin, Manager, or Teacher with courses)
         $data->showsidebar = $this->isPrivileged || !empty($data->courses);
 
+        // Hide payment and magic reports for teachers/managers (only Admins should see these, assuming 'isPrivileged' implies extensive rights but user wants restrictions)
+        // Wait, user said "for teachers / manager hide payment magic report".
+        // My isPrivileged currently maps to "Admin OR Manager".
+        // Teachers fall into the "else" block in index.php (has_capability 'moodle/course:update').
+        // So non-privileged users are teachers (and students, but students have no sidebar).
+
+        // Requirement: Hide Payment & Magic Report for Teachers AND Managers.
+        // This implies only Site Admins should see them? Or maybe the user considers "Manager" as "Teacher level"?
+        // Let's look at index.php:
+        // $isPrivileged = has_capability('moodle/site:config', $context) || has_capability('moodle/course:create', $context) || is_siteadmin();
+        // Managers usually have 'moodle/site:config' or 'moodle/course:create'.
+        // So Managers ARE $isPrivileged.
+        // Teachers are NOT $isPrivileged (usually).
+
+        // If user wants to hide these for Teachers AND Managers, then only Site Admins should see them.
+        $data->showpayment = \is_siteadmin();
+        $data->showmagic = \is_siteadmin();
+
         return $data;
     }
 }
