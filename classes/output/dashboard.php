@@ -222,6 +222,9 @@ class dashboard implements renderable, templatable
             ];
         }
 
+        // Determine if sidebar should be shown (Admin, Manager, or Teacher with courses)
+        $data->showsidebar = $this->isPrivileged || !empty($data->courses);
+
         return $data;
     }
 }

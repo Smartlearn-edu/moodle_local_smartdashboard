@@ -1,6 +1,7 @@
 <div class="container-fluid dashboard-container p-0">
     <div class="row g-0">
         <!-- Sidebar -->
+{{#showsidebar}}
         <div id="sidebar-col" class="col-12 col-md-3 min-vh-100 p-0 transform-sidebar" style="background-color: #1a1d21; transition: all 0.3s ease;">
             <div class="smartdashboard-sidebar p-3 sticky-top">
                 <div class="d-flex align-items-center justify-content-between mb-4 pt-2 px-2">
@@ -63,9 +64,10 @@
                 </ul>
             </div>
         </div>
+{{/showsidebar}}
 
         <!-- Main Content -->
-        <div id="main-content-col" class="col-12 col-md-9 p-4 min-vh-100" style="transition: all 0.3s ease;">
+        <div id="main-content-col" class="col-12 {{#showsidebar}}col-md-9{{/showsidebar}} p-4 min-vh-100" style="transition: all 0.3s ease;">
             <!-- Header -->
             <div class="row mb-4 align-items-center">
                 <div class="col-12">
