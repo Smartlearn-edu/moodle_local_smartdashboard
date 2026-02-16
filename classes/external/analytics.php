@@ -463,19 +463,33 @@ class analytics extends external_api
             $target_course_ids = array_keys($all_courses);
         }
 
+        // Default empty structure
+        $empty_result = [
+            'total_students' => 0,
+            'active_students' => 0,
+            'total_enrollments' => 0,
+            'total_teachers' => 0,
+            'total_courses' => 0,
+            'activities_by_type' => [
+                'assessment' => 0,
+                'collaboration' => 0,
+                'communication' => 0,
+                'resources' => 0,
+                'interactive' => 0
+            ],
+            'categories' => [],
+            'filter_options' => $filter_options
+        ];
+
         if (empty($target_course_ids)) {
-            return [
-                'total_students' => 0,
-                'total_teachers' => 0,
-                'total_courses' => 0,
-                'categories' => [],
-                'filter_options' => $filter_options
-            ];
+            return $empty_result;
         }
 
         list($insql, $inparams) = $DB->get_in_or_equal($target_course_ids);
 
         // 3. Calculate Stats
+
+        // Total Students (Unique users with student role in context) - Existing logic
         $sql_students = "SELECT COUNT(DISTINCT ra.userid) 
                            FROM {role_assignments} ra
                            JOIN {context} ctx ON ctx.id = ra.contextid
@@ -485,6 +499,31 @@ class analytics extends external_api
                             AND r.shortname = 'student'";
         $total_students = $DB->count_records_sql($sql_students, $inparams);
 
+        // Active Students (Unique, active enrollment)
+        $sql_active = "SELECT COUNT(DISTINCT ue.userid)
+                         FROM {user_enrolments} ue
+                         JOIN {enrol} e ON e.id = ue.enrolid
+                         JOIN {user} u ON u.id = ue.userid
+                        WHERE e.courseid $insql
+                          AND ue.status = 0
+                          AND e.status = 0
+                          AND u.deleted = 0
+                          AND u.suspended = 0";
+        $active_students = $DB->count_records_sql($sql_active, $inparams);
+
+        // Total Enrollments (Count repeated, active enrollment)
+        $sql_enrol = "SELECT COUNT(ue.id)
+                        FROM {user_enrolments} ue
+                        JOIN {enrol} e ON e.id = ue.enrolid
+                        JOIN {user} u ON u.id = ue.userid
+                       WHERE e.courseid $insql
+                         AND ue.status = 0
+                         AND e.status = 0
+                         AND u.deleted = 0
+                         AND u.suspended = 0";
+        $total_enrollments = $DB->count_records_sql($sql_enrol, $inparams);
+
+        // Teachers
         $sql_teachers = "SELECT COUNT(DISTINCT ra.userid)
                            FROM {role_assignments} ra
                            JOIN {context} ctx ON ctx.id = ra.contextid
@@ -496,6 +535,69 @@ class analytics extends external_api
         //$unique_teachers = $total_teachers; // Consistent naming
 
         $total_courses = count($target_course_ids);
+
+        // Activities Breakdown
+        $sql_activities = "SELECT m.name, COUNT(cm.id) as cnt
+                             FROM {course_modules} cm
+                             JOIN {modules} m ON m.id = cm.module
+                            WHERE cm.course $insql
+                              AND cm.deletioninprogress = 0
+                            GROUP BY m.name";
+        $activity_counts = $DB->get_records_sql_menu($sql_activities, $inparams);
+
+        $activities_by_type = [
+            'assessment' => 0,
+            'collaboration' => 0,
+            'communication' => 0,
+            'resources' => 0,
+            'interactive' => 0
+        ];
+
+        // Map modules to categories
+        $module_map = [
+            // Assessment
+            'assign' => 'assessment',
+            'quiz' => 'assessment',
+            'workshop' => 'assessment',
+            'attendance' => 'assessment',
+            // Collaboration
+            'forum' => 'collaboration',
+            'wiki' => 'collaboration',
+            'glossary' => 'collaboration',
+            'data' => 'collaboration',
+            // Communication
+            'chat' => 'communication',
+            'choice' => 'communication',
+            'feedback' => 'communication',
+            'survey' => 'communication',
+            'bigbluebuttonbn' => 'communication',
+            // Resources
+            'book' => 'resources',
+            'file' => 'resources',
+            'folder' => 'resources',
+            'imscp' => 'resources',
+            'label' => 'resources',
+            'page' => 'resources',
+            'resource' => 'resources', // file module name in DB is resource usually? No, it's resource.
+            'url' => 'resources',
+            // Interactive
+            'h5pactivity' => 'interactive',
+            'lesson' => 'interactive',
+            'scorm' => 'interactive',
+            'lti' => 'interactive',
+            'external-tool' => 'interactive'
+        ];
+
+        foreach ($activity_counts as $modname => $cnt) {
+            // Check mapping
+            // Note: 'resource' module is 'resource' in DB (for File resource)
+            if (isset($module_map[$modname])) {
+                $activities_by_type[$module_map[$modname]] += $cnt;
+            } else {
+                // If unknown, currently ignoring or could add to 'resources'
+                // For now, only mapped modules
+            }
+        }
 
         // 4. Breakdown by Category (aggregated based on filtered courses)
         // Course Count per Category
@@ -543,8 +645,11 @@ class analytics extends external_api
 
         return [
             'total_students' => $total_students,
+            'active_students' => $active_students,
+            'total_enrollments' => $total_enrollments,
             'total_teachers' => $total_teachers,
             'total_courses' => $total_courses,
+            'activities_by_type' => $activities_by_type,
             'categories' => $cat_stats,
             'filter_options' => $filter_options
         ];
@@ -922,8 +1027,17 @@ class analytics extends external_api
     {
         return new external_single_structure([
             'total_students' => new external_value(\PARAM_INT, 'Total Students'),
+            'active_students' => new external_value(\PARAM_INT, 'Total Active Students'),
+            'total_enrollments' => new external_value(\PARAM_INT, 'Total Enrollments (Repeated)'),
             'total_teachers' => new external_value(\PARAM_INT, 'Total Teachers'),
             'total_courses' => new external_value(\PARAM_INT, 'Total Courses'),
+            'activities_by_type' => new external_single_structure([
+                'assessment' => new external_value(\PARAM_INT, 'Assessment'),
+                'collaboration' => new external_value(\PARAM_INT, 'Collaboration'),
+                'communication' => new external_value(\PARAM_INT, 'Communication'),
+                'resources' => new external_value(\PARAM_INT, 'Resources'),
+                'interactive' => new external_value(\PARAM_INT, 'Interactive content')
+            ]),
             'categories' => new external_multiple_structure(
                 new external_single_structure([
                     'id' => new external_value(\PARAM_INT, 'Cat ID'),

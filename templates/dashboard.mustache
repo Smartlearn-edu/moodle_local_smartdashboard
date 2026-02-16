@@ -281,28 +281,34 @@
                             
                             <!-- Key Metrics Row -->
                              <div id="admin-stats-row" class="row mb-5">
-                                <div class="col-md-3">
+                                <div class="col-md-3 mb-3">
                                     <div class="p-3 border rounded bg-white text-dark text-center h-100 shadow-sm">
                                         <h6 class="text-uppercase small text-muted">Total Students</h6>
                                         <h2 id="total-students-count" class="fw-bold mb-0">-</h2>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 border rounded bg-white text-dark text-center h-100 shadow-sm">
+                                         <h6 class="text-uppercase small text-muted">Active Students</h6>
+                                         <h2 id="active-students-count" class="fw-bold mb-0 text-success">-</h2>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <div class="p-3 border rounded bg-white text-dark text-center h-100 shadow-sm">
+                                         <h6 class="text-uppercase small text-muted">Total Enrollments</h6>
+                                         <h2 id="total-enrollments-count" class="fw-bold mb-0 text-primary">-</h2>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-3">
                                     <div class="p-3 border rounded bg-white text-dark text-center h-100 shadow-sm">
                                         <h6 class="text-uppercase small text-muted">Total Teachers</h6>
                                         <h2 id="total-teachers-count" class="fw-bold mb-0">-</h2>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-3 mb-3">
                                     <div class="p-3 border rounded bg-white text-dark text-center h-100 shadow-sm">
                                         <h6 class="text-uppercase small text-muted">Active Courses</h6>
                                         <h2 id="total-courses-count" class="fw-bold mb-0">-</h2>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="p-3 border rounded bg-white text-dark text-center h-100 shadow-sm">
-                                        <h6 class="text-uppercase small text-muted">Categories</h6>
-                                        <h2 id="total-categories-count" class="fw-bold mb-0">-</h2>
                                     </div>
                                 </div>
                             </div>
@@ -324,11 +330,11 @@
                                 <div class="col-md-4 mb-4">
                                     <div class="card h-100 border-0 shadow-sm">
                                         <div class="card-header bg-white border-0">
-                                            <h6 class="fw-bold mb-0">Student vs Teacher Ratio</h6>
+                                            <h6 class="fw-bold mb-0">Activity Distribution</h6>
                                         </div>
                                         <div class="card-body d-flex align-items-center justify-content-center">
                                             <div style="position: relative; height: 250px; width: 100%;">
-                                                <canvas id="chart-user-ratio"></canvas>
+                                                <canvas id="chart-activities"></canvas>
                                             </div>
                                         </div>
                                     </div>
@@ -351,7 +357,6 @@
                                                 <th class="text-center">Courses</th>
                                                 <th class="text-center">Students</th>
                                                 <th class="text-center">Teachers</th>
-                                                <th class="text-center">Student/Teacher Ratio</th>
                                             </tr>
                                         </thead>
                                         <tbody>
