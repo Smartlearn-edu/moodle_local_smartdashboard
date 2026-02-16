@@ -52,7 +52,7 @@ IMPORTANT RULES:
    - 'chart_value_column': The SQL alias/column name to use as chart values (Y-axis or pie sizes). Only if chart_type is not 'none'.
 3. Do NOT wrap in markdown code blocks.
 4. **CRITICAL SECURITY RULE**: SQL MUST be a pure SELECT query ONLY. You are STRICTLY FORBIDDEN from generating any of the following: INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, REPLACE, GRANT, REVOKE, RENAME, EXEC, EXECUTE, CALL, LOAD DATA, INTO OUTFILE, INTO DUMPFILE, LOCK, UNLOCK, FLUSH, SET, PREPARE, DEALLOCATE. Do NOT use semicolons. Do NOT use SQL comments (-- or /* */). Any non-SELECT query WILL BE REJECTED by the server and will not execute.
-5. Limit results to 20 rows unless the user specifies otherwise.
+5. Do NOT use the LIMIT clause. The system handles limits automatically.
 6. Use standard Moodle table names and column names. You know the Moodle database schema well.
 7. Make sure all column references in SELECT, WHERE, HAVING, and ORDER BY clauses come from properly JOINed tables.
 8. Use meaningful column aliases (e.g., 'course_name', 'student_count') for readability.
@@ -64,7 +64,7 @@ Chart Type Guidelines:
 - 'none': Use when data is a list of items, contains only text, has a single row, or charting would not add value
 
 Example output:
-{\"sql\": \"SELECT c.fullname AS course_name, COUNT(ue.id) AS enrolled FROM {course} c JOIN {enrol} e ON e.courseid = c.id JOIN {user_enrolments} ue ON ue.enrolid = e.id GROUP BY c.id, c.fullname ORDER BY enrolled DESC LIMIT 10\", \"explanation\": \"Top 10 courses by enrollment count\", \"chart_type\": \"bar\", \"chart_label_column\": \"course_name\", \"chart_value_column\": \"enrolled\"}
+{\"sql\": \"SELECT c.fullname AS course_name, COUNT(ue.id) AS enrolled FROM {course} c JOIN {enrol} e ON e.courseid = c.id JOIN {user_enrolments} ue ON ue.enrolid = e.id GROUP BY c.id, c.fullname ORDER BY enrolled DESC\", \"explanation\": \"Top 10 courses by enrollment count\", \"chart_type\": \"bar\", \"chart_label_column\": \"course_name\", \"chart_value_column\": \"enrolled\"}
 ";
     }
 
@@ -197,6 +197,9 @@ Example output:
             // Sanitize SQL: convert mdl_ prefix to {tablename} if AI used it
             $sql = $raw_sql;
             $sql = preg_replace('/\bmdl_([a-z_]+)/', '{$1}', $sql);
+
+            // Strip LIMIT clause if present (system handles it)
+            $sql = preg_replace('/\s+LIMIT\s+\d+(\s*,\s*\d+)?\s*;?\s*$/i', '', $sql);
 
             // Execute SQL using Moodle's read-only method (additional safety net)
             $results = $DB->get_records_sql($sql, null, 0, 1000);
