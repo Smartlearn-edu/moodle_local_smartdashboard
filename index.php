@@ -40,6 +40,7 @@ $PAGE->set_url(new moodle_url('/local/smartdashboard/index.php'));
 $PAGE->set_title(get_string('pluginname', 'local_smartdashboard'));
 $PAGE->set_heading(get_string('pluginname', 'local_smartdashboard'));
 $PAGE->set_pagelayout('report');
+$PAGE->blocks->add_region('content');
 
 require_login();
 
