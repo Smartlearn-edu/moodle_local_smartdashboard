@@ -594,9 +594,10 @@ class analytics extends external_api
         // 2. Find Courses with specific enrollment methods (paypal, fee, payment) or ANY method with cost > 0
         // We look for enrol instances in these categories
 
-        $sql = "SELECT e.id as enrolid, e.courseid, e.enrol, e.cost, e.currency, c.category, c.fullname, c.shortname
+        $sql = "SELECT e.id as enrolid, e.courseid, e.enrol, e.cost, e.currency, c.category, c.fullname, c.shortname, cc.path
                   FROM {enrol} e
                   JOIN {course} c ON c.id = e.courseid
+                  JOIN {course_categories} cc ON cc.id = c.category
                  WHERE (e.cost > 0 
                     OR e.enrol LIKE '%pay%' 
                     OR e.enrol LIKE '%fee%' 
@@ -793,17 +794,48 @@ class analytics extends external_api
                 );
             }
 
+            // Calculates the Group Category ID for Cumulative Aggregation
+            $group_cat_id = $instance->category; // Default to direct category if path parsing fails
+
+            if (!empty($instance->path)) {
+                $path_ids = explode('/', trim($instance->path, '/'));
+                // Filter out empty entries
+                $path_ids = array_values(array_filter($path_ids, function ($v) {
+                    return $v !== '';
+                }));
+
+                if ($categoryid == 0) {
+                    // Root level filter: Group by top-level category (first item in path)
+                    if (isset($path_ids[0])) {
+                        $group_cat_id = $path_ids[0];
+                    }
+                } else {
+                    // Specific category selected: Group by the immediate child of the selected category
+                    // Find the selected category in the path
+                    $idx = array_search($categoryid, $path_ids);
+                    if ($idx !== false) {
+                        // If there is a child category after the selected one, group by that child
+                        if (isset($path_ids[$idx + 1])) {
+                            $group_cat_id = $path_ids[$idx + 1];
+                        } else {
+                            // The course is directly inside the selected category
+                            $group_cat_id = $categoryid;
+                        }
+                    }
+                }
+            }
+
             // Aggregate Category Stats
-            if (!isset($category_stats[$instance->category])) {
-                $category_stats[$instance->category] = [
-                    'id' => $instance->category,
-                    'name' => 'Category ' . $instance->category,
+            if (!isset($category_stats[$group_cat_id])) {
+                $category_stats[$group_cat_id] = [
+                    'id' => $group_cat_id,
+                    'name' => 'Category ' . $group_cat_id,
                     'student_count' => 0,
                     'revenue' => 0
                 ];
             }
-            $category_stats[$instance->category]['student_count'] += $instance_students;
-            $category_stats[$instance->category]['revenue'] += $instance_revenue;
+            $category_stats[$group_cat_id]['student_count'] += $instance_students;
+            $category_stats[$group_cat_id]['revenue'] += $instance_revenue;
 
             $total_students += $instance_students;
             $total_revenue += $instance_revenue;
