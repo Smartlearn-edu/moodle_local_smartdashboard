@@ -2164,6 +2164,28 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
 
     return {
         init: function () {
+            // Sidebar Toggle Logic
+            var $sidebarToggle = $('#sidebar-toggle-btn');
+            var $dashboardContainer = $('.dashboard-container');
+
+            // Check localStorage
+            var isCollapsed = localStorage.getItem('smartdashboard_sidebar_collapsed') === 'true';
+            if (isCollapsed) {
+                $dashboardContainer.addClass('sidebar-collapsed');
+                // Adjust icon if needed (optional)
+            }
+
+            $sidebarToggle.on('click', function () {
+                $dashboardContainer.toggleClass('sidebar-collapsed');
+                var collapsed = $dashboardContainer.hasClass('sidebar-collapsed');
+                localStorage.setItem('smartdashboard_sidebar_collapsed', collapsed);
+
+                // Trigger window resize to adjust charts after transition
+                setTimeout(function () {
+                    window.dispatchEvent(new Event('resize'));
+                }, 300);
+            });
+
             var navLinks = $('#dashboard-sidebar-nav .nav-link');
 
             navLinks.on('click', function (e) {
