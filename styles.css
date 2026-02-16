@@ -50,24 +50,24 @@ body.path-local-smartdashboard .secondary-navigation {
 }
 
 /* Headings — use bright white for readability on dark bg */
-.path-local-smartdashboard h1,
-.path-local-smartdashboard h2,
-.path-local-smartdashboard h3,
-.path-local-smartdashboard h4,
-.path-local-smartdashboard h5,
-.path-local-smartdashboard h6,
-.path-local-smartdashboard .dashboard-title {
+.dashboard-container h1,
+.dashboard-container h2,
+.dashboard-container h3,
+.dashboard-container h4,
+.dashboard-container h5,
+.dashboard-container h6,
+.dashboard-container .dashboard-title {
     color: #ffffff !important;
     font-weight: 500;
 }
 
 /* Subtitle / muted text — brighter for readability */
-.path-local-smartdashboard .text-muted {
+.dashboard-container .text-muted {
     color: #94d2bd !important;
 }
 
 /* Form labels — use a bright, visible color */
-.path-local-smartdashboard .form-label {
+.dashboard-container .form-label {
     color: #a8dadc !important;
     font-weight: 600;
 }
@@ -114,7 +114,7 @@ body.path-local-smartdashboard .secondary-navigation {
 }
 
 /* Cards & Sections */
-.path-local-smartdashboard .card {
+.dashboard-container .card {
     background-color: #2b2d3e;
     border: 1px solid #3e4152;
     border-radius: 12px;
@@ -123,12 +123,12 @@ body.path-local-smartdashboard .secondary-navigation {
 }
 
 /* Nested cards (like course cards or section cards) */
-.path-local-smartdashboard .dashboard-section .card {
+.dashboard-container .dashboard-section .card {
     background-color: #323548;
     border: none;
 }
 
-.path-local-smartdashboard .card-header {
+.dashboard-container .card-header {
     background-color: transparent;
     border-bottom: 1px solid #3e4152;
     color: #ffffff;
@@ -136,52 +136,52 @@ body.path-local-smartdashboard .secondary-navigation {
     padding: 15px 20px;
 }
 
-.path-local-smartdashboard .card-body {
+.dashboard-container .card-body {
     padding: 20px;
 }
 
 /* Course Cards Specifics */
-.path-local-smartdashboard .course-card {
+.dashboard-container .course-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     background-color: #323548;
 }
 
-.path-local-smartdashboard .course-card:hover {
+.dashboard-container .course-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
 }
 
-.path-local-smartdashboard .card-img-top-wrapper {
+.dashboard-container .card-img-top-wrapper {
     border-top-left-radius: 12px;
     border-top-right-radius: 12px;
     background-color: #252836 !important;
 }
 
 /* Links */
-.path-local-smartdashboard a {
+.dashboard-container a {
     color: #60a5fa;
 }
 
-.path-local-smartdashboard a:hover {
+.dashboard-container a:hover {
     color: #93c5fd;
     text-decoration: none;
 }
 
-.path-local-smartdashboard .text-dark {
+.dashboard-container .text-dark {
     color: #e3e2e2 !important;
 }
 
 /* Forms & Inputs */
-.path-local-smartdashboard .form-select,
-.path-local-smartdashboard .form-control {
+.dashboard-container .form-select,
+.dashboard-container .form-control {
     background-color: #1f222e;
     border: 1px solid #3e4152;
     color: #e3e2e2;
     border-radius: 8px;
 }
 
-.path-local-smartdashboard .form-select:focus,
-.path-local-smartdashboard .form-control:focus {
+.dashboard-container .form-select:focus,
+.dashboard-container .form-control:focus {
     background-color: #1f222e;
     color: #fff;
     border-color: #3b82f6;
@@ -189,7 +189,7 @@ body.path-local-smartdashboard .secondary-navigation {
 }
 
 /* Tables */
-.path-local-smartdashboard .table {
+.dashboard-container .table {
     color: #e3e2e2;
     --bs-table-bg: transparent;
     --bs-table-color: #e3e2e2;
@@ -198,7 +198,7 @@ body.path-local-smartdashboard .secondary-navigation {
 }
 
 /* Table headers — bright golden/yellow for high contrast on dark */
-.path-local-smartdashboard .table thead th {
+.dashboard-container .table thead th {
     border-bottom: 2px solid #4a4f65;
     color: #fbbf24 !important;
     font-weight: 600;
@@ -209,10 +209,10 @@ body.path-local-smartdashboard .secondary-navigation {
 }
 
 /* Override table-light for dark mode — use a dark blue-grey instead of white */
-.path-local-smartdashboard .table-light,
-.path-local-smartdashboard thead.table-light,
-.path-local-smartdashboard .table-light th,
-.path-local-smartdashboard thead.table-light th {
+.dashboard-container .table-light,
+.dashboard-container thead.table-light,
+.dashboard-container .table-light th,
+.dashboard-container thead.table-light th {
     --bs-table-bg: #1e2233 !important;
     --bs-table-color: #fbbf24 !important;
     background-color: #1e2233 !important;
@@ -220,70 +220,70 @@ body.path-local-smartdashboard .secondary-navigation {
     border-color: #4a4f65 !important;
 }
 
-.path-local-smartdashboard .table td,
-.path-local-smartdashboard .table th {
+.dashboard-container .table td,
+.dashboard-container .table th {
     border-color: #3e4152;
     vertical-align: middle;
 }
 
 /* Dynamically generated thead bg-light override */
-.path-local-smartdashboard thead.bg-light,
-.path-local-smartdashboard thead.bg-light th {
+.dashboard-container thead.bg-light,
+.dashboard-container thead.bg-light th {
     background-color: #1e2233 !important;
     color: #fbbf24 !important;
 }
 
 /* List Groups */
-.path-local-smartdashboard .list-group-item {
+.dashboard-container .list-group-item {
     background-color: transparent;
     border-color: #3e4152;
     color: #e3e2e2;
 }
 
 /* Badges */
-.path-local-smartdashboard .badge.bg-light {
+.dashboard-container .badge.bg-light {
     background-color: #3e4152 !important;
     color: #e3e2e2 !important;
 }
 
 /* Alerts */
-.path-local-smartdashboard .alert {
+.dashboard-container .alert {
     background-color: #323548;
     border-color: #3e4152;
     color: #e3e2e2;
 }
 
 /* Utils */
-.path-local-smartdashboard .bg-white {
+.dashboard-container .bg-white {
     background-color: #323548 !important;
     color: #e3e2e2 !important;
 }
 
-.path-local-smartdashboard .bg-light {
+.dashboard-container .bg-light {
     background-color: #252836 !important;
     color: #e3e2e2 !important;
 }
 
 /* Buttons */
-.path-local-smartdashboard .btn-outline-secondary {
+.dashboard-container .btn-outline-secondary {
     color: #aeb0b5;
     border-color: #3e4152;
 }
 
-.path-local-smartdashboard .btn-outline-secondary:hover {
+.dashboard-container .btn-outline-secondary:hover {
     background-color: #3e4152;
     color: #fff;
 }
 
 /* Card header bg-white fix — force dark for chart section headers */
-.path-local-smartdashboard .card-header.bg-white {
+.dashboard-container .card-header.bg-white {
     background-color: #323548 !important;
     color: #ffffff !important;
     border: none !important;
 }
 
 /* Chart section heading text override */
-.path-local-smartdashboard .card-header h6 {
+.dashboard-container .card-header h6 {
     color: #ffffff !important;
 }
 
@@ -331,7 +331,7 @@ body.path-local-smartdashboard .secondary-navigation {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .path-local-smartdashboard .dashboard-container {
+    .dashboard-container {
         padding-top: 10px;
     }
 }
