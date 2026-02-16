@@ -831,11 +831,13 @@ class analytics extends external_api
                     'id' => $group_cat_id,
                     'name' => 'Category ' . $group_cat_id,
                     'student_count' => 0,
-                    'revenue' => 0
+                    'revenue' => 0,
+                    'course_ids' => [] // Temp calculation
                 ];
             }
             $category_stats[$group_cat_id]['student_count'] += $instance_students;
             $category_stats[$group_cat_id]['revenue'] += $instance_revenue;
+            $category_stats[$group_cat_id]['course_ids'][$instance->courseid] = true;
 
             $total_students += $instance_students;
             $total_revenue += $instance_revenue;
@@ -845,17 +847,20 @@ class analytics extends external_api
             $currency = 'USD'; // Fallback default
         }
 
-        // Enrich Category Names
+        // Enrich Category Names and Finalize Counts
         if (!empty($category_stats)) {
             $cat_ids = array_keys($category_stats);
             list($csql, $cparams) = $DB->get_in_or_equal($cat_ids);
             $cats = $DB->get_records_select('course_categories', "id $csql", $cparams, '', 'id, name');
-            foreach ($cats as $c) {
-                if (isset($category_stats[$c->id])) {
-                    $category_stats[$c->id]['name'] = $c->name;
+            foreach ($category_stats as &$stat) {
+                if (isset($cats[$stat['id']])) {
+                    $stat['name'] = $cats[$stat['id']]->name;
                 }
+                $stat['course_count'] = count($stat['course_ids']);
+                unset($stat['course_ids']); // Remove temp key
             }
         }
+        unset($stat);
 
         // Build payment_breakdown for each course: group by amount+currency, count occurrences
         foreach ($course_stats as &$cs) {
@@ -902,6 +907,7 @@ class analytics extends external_api
             'total_students' => $total_students,
             'total_revenue' => (float)$total_revenue,
             'currency' => $currency,
+            // Ensure array is re-indexed
             'categories' => array_values($category_stats),
             'courses' => array_values($course_stats),
             'gateways' => $available_gateways
