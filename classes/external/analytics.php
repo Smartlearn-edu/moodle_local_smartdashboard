@@ -626,6 +626,16 @@ class analytics extends external_api
                  GROUP BY c.category";
         $teacher_counts = $DB->get_records_sql_menu($sql, $inparams);
 
+        // Activity Count per Category
+        $sql = "SELECT c.category, COUNT(cm.id) as cnt
+                  FROM {course} c
+                  JOIN {course_modules} cm ON cm.course = c.id
+                 WHERE c.id $insql
+                   AND cm.visible = 1
+                   AND cm.deletioninprogress = 0
+                 GROUP BY c.category";
+        $activity_counts_by_cat = $DB->get_records_sql_menu($sql, $inparams);
+
         $cat_stats = [];
         foreach ($course_counts as $catid => $count) {
             $catname = isset($all_categories[$catid]) ? $all_categories[$catid]->name : 'Unknown';
@@ -634,7 +644,8 @@ class analytics extends external_api
                 'name' => $catname,
                 'course_count' => $count,
                 'student_count' => $student_counts[$catid] ?? 0,
-                'teacher_count' => $teacher_counts[$catid] ?? 0
+                'teacher_count' => $teacher_counts[$catid] ?? 0,
+                'activity_count' => $activity_counts_by_cat[$catid] ?? 0
             ];
         }
 
@@ -1044,7 +1055,8 @@ class analytics extends external_api
                     'name' => new external_value(\PARAM_TEXT, 'Name'),
                     'course_count' => new external_value(\PARAM_INT, 'Course count'),
                     'student_count' => new external_value(\PARAM_INT, 'Student count'),
-                    'teacher_count' => new external_value(\PARAM_INT, 'Teacher count')
+                    'teacher_count' => new external_value(\PARAM_INT, 'Teacher count'),
+                    'activity_count' => new external_value(\PARAM_INT, 'Activity count')
                 ])
             ),
             'filter_options' => new external_single_structure([

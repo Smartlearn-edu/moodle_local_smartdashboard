@@ -1110,8 +1110,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
 
             var labels = top.map(function (c) { return c.name; });
             var students = top.map(function (c) { return c.student_count; });
-            // Teachers dataset removed? Or kept? Keeping for consistency if useful.
-            var teachers = top.map(function (c) { return c.teacher_count; });
+            var activities = top.map(function (c) { return c.activity_count !== undefined ? c.activity_count : 0; });
 
             new ChartJS(ctx, {
                 type: 'bar',
@@ -1124,10 +1123,10 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                         borderColor: 'rgba(54, 162, 235, 1)',
                         borderWidth: 1
                     }, {
-                        label: 'Teachers',
-                        data: teachers,
-                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
+                        label: 'Activities',
+                        data: activities,
+                        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
                         borderWidth: 1
                     }]
                 },
