@@ -278,10 +278,15 @@ class analytics extends external_api
         // 1. Get Teacher's Courses
         $teacher_courses = \enrol_get_users_courses($USER->id, true, 'id, fullname, shortname');
 
-        // 2. Filter for Shared Courses (User is enrolled)
+        // 2. Filter for Shared Courses (User is enrolled AND Teacher has capability)
         $shared_courses = [];
         foreach ($teacher_courses as $course) {
             $c_context = \context_course::instance($course->id);
+            // Check if teacher has capability to view this course (e.g. is a teacher in it)
+            if (!\has_capability('moodle/course:update', $c_context)) {
+                continue;
+            }
+
             if (\is_enrolled($c_context, $studentid)) {
                 $shared_courses[] = $course;
             }
