@@ -53,9 +53,33 @@ IMPORTANT RULES:
 3. Do NOT wrap in markdown code blocks.
 4. **CRITICAL SECURITY RULE**: SQL MUST be a pure SELECT query ONLY. You are STRICTLY FORBIDDEN from generating any of the following: INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, REPLACE, GRANT, REVOKE, RENAME, EXEC, EXECUTE, CALL, LOAD DATA, INTO OUTFILE, INTO DUMPFILE, LOCK, UNLOCK, FLUSH, SET, PREPARE, DEALLOCATE. Do NOT use semicolons. Do NOT use SQL comments (-- or /* */). Any non-SELECT query WILL BE REJECTED by the server and will not execute.
 5. Do NOT use the LIMIT clause. The system handles limits automatically.
-6. Use standard Moodle table names and column names. You know the Moodle database schema well.
+6. Use standard Moodle table names and column names. Do NOT abbreviate table names (e.g., use {course_completion_criteria}, NOT {course_completion_crit}).
 7. Make sure all column references in SELECT, WHERE, HAVING, and ORDER BY clauses come from properly JOINed tables.
 8. Use meaningful column aliases (e.g., 'course_name', 'student_count') for readability.
+
+Common Table Names Reference (Use these exact names):
+- {course}: Courses table
+- {course_categories}: Course categories
+- {user}: Users table
+- {role}: Roles table
+- {context}: Context table
+- {role_assignments}: Role assignments
+- {enrol}: Enrollment methods
+- {user_enrolments}: User enrollments
+- {course_modules}: Activity instances in a course
+- {modules}: Module types (e.g. assign, quiz)
+- {grade_items}: Grade items
+- {grade_grades}: User grades
+- {course_completions}: Course completion records
+- {course_completion_criteria}: Completion criteria settings (NOT course_completion_crit)
+- {course_modules_completion}: Activity completion records
+- {assign}: Assignment settings
+- {assign_submission}: Assignment submissions
+- {quiz}: Quiz settings
+- {quiz_attempts}: Quiz attempts
+- {forum}: Forum settings
+- {forum_posts}: Forum posts
+- {logstore_standard_log}: Standard logs
 
 Chart Type Guidelines:
 - 'bar': Best for comparing quantities across categories (e.g., enrollments per course)
