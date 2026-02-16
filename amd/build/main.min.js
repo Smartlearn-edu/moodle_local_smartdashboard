@@ -887,10 +887,12 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             this.container = $('#section-analytics');
             this.currentFilters = {
                 categoryid: 0,
+                // We keep course filter as per existing logic, but primary filter is now hierarchical
                 courseid: 0,
                 includesubcategories: true
             };
             this.filtersRendered = false;
+            this.allCategories = []; // Store for hierarchy
             var self = this;
             LoadPrompt.show(this.container, 'System Analytics', 'bar-chart', function () {
                 self.loadData();
@@ -899,8 +901,6 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
 
         loadData: function () {
             var self = this;
-            // Show loading overlay or spinner on charts? 
-            // For now just console log.
             console.log('Fetching System Analytics with filters:', this.currentFilters);
 
             Ajax.call([{
@@ -937,11 +937,13 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
         renderFilters: function (options) {
             var self = this;
             this.filterOptions = options; // Store for dependencies
+            this.allCategories = options.categories || [];
 
             var html = '<div class="row mb-4 animate__animated animate__fadeIn">';
 
-            // Course Filter
-            html += '<div class="col-md-4 mb-2">';
+            // Course Filter (Keep as legacy/specific filter)
+            html += '<div class="col-md-3 mb-2">';
+            html += '<label class="form-label small text-muted">Filter by Course</label>';
             html += '<select id="admin-filter-course" class="form-select border-0 shadow-sm">';
             html += '<option value="0">All Courses</option>';
             options.courses.forEach(function (c) {
@@ -949,141 +951,156 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             });
             html += '</select></div>';
 
-            // Category Filter
-            html += '<div class="col-md-4 mb-2">';
+            // Hierarchical Category Filters (Matching Payment Section style)
+            // Level 1: Category
+            html += '<div class="col-md-3 mb-2">';
+            html += '<label class="form-label small text-muted">Category</label>';
             html += '<select id="admin-filter-category" class="form-select border-0 shadow-sm">';
             html += '<option value="0">All Categories</option>';
-            options.categories.forEach(function (c) {
-                // Only show top level or all? Show all for now.
-                html += '<option value="' + c.id + '">' + c.name + '</option>';
+            // Only parent categories (parent=0)
+            this.allCategories.forEach(function (c) {
+                if (c.parent === 0) {
+                    html += '<option value="' + c.id + '">' + c.name + '</option>';
+                }
             });
-            html += '</select>';
+            html += '</select></div>';
 
-            // Subcategory Option
-            html += '<div id="admin-subcategory-options" class="mt-2 text-muted small" style="display:none;">';
-            html += '<div class="form-check form-switch">';
-            html += '<input class="form-check-input" type="checkbox" id="admin-include-subcats" checked>';
-            html += '<label class="form-check-label" for="admin-include-subcats">Include sub-categories</label>';
-            html += '</div>';
-            html += '</div>';
+            // Level 2: Subcategory (Hidden by default)
+            html += '<div class="col-md-3 mb-2 d-none" id="admin-subcat-wrapper">';
+            html += '<label class="form-label small text-muted">Subcategory</label>';
+            html += '<select id="admin-filter-subcategory" class="form-select border-0 shadow-sm">';
+            html += '<option value="0">All</option>';
+            html += '</select></div>';
 
-            html += '</div>'; // End col
+            // Level 3: Sub-subcategory (Hidden by default)
+            html += '<div class="col-md-3 mb-2 d-none" id="admin-subsubcat-wrapper">';
+            html += '<label class="form-label small text-muted">Sub-subcategory</label>';
+            html += '<select id="admin-filter-subsubcategory" class="form-select border-0 shadow-sm">';
+            html += '<option value="0">All</option>';
+            html += '</select></div>';
 
-            // Filter Actions? Auto-apply on change.
-            html += '</div>'; // End row
+            // Include Subcategories Toggle? (Implicitly handled by hierarchy selection, but useful explicit option)
+            // Let's keep it but maybe styled differently or just assume true for hierarchical drill down?
+            // The user says "use the filter by category ... same way as Payment". Payment doesn't have a toggle checkbox visible in screenshot usually.
+            // But let's keep the logic simple: Selecting a category automatically includes its children unless specified otherwise.
+            // Backend defaults 'includesubcategories' to true.
 
-            // Prepend to container, before stats cards
+            html += '</div>'; // End filter row
+
             this.container.prepend(html);
 
-            // Listeners
-            this.container.find('#admin-filter-category').on('change', function () {
-                self.currentFilters.categoryid = parseInt($(this).val());
-                self.currentFilters.courseid = 0; // Reset course when cat changes?
-                // Also reset course dropdown value
-                $('#admin-filter-course').val(0);
+            // Bind Events
+            this.bindFilterEvents();
+        },
 
-                self.updateCourseOptions();
-                self.toggleSubcatOptions();
-                self.loadData();
-            });
+        bindFilterEvents: function () {
+            var self = this;
 
+            // Course Filter
             this.container.find('#admin-filter-course').on('change', function () {
                 self.currentFilters.courseid = parseInt($(this).val());
-                // If course selected, maybe set category? (Optional, skipping for now)
                 self.loadData();
             });
 
-            this.container.find('#admin-include-subcats').on('change', function () {
-                self.currentFilters.includesubcategories = $(this).is(':checked');
-                self.loadData();
+            // Category Level 1 -> Level 2
+            this.container.find('#admin-filter-category').on('change', function () {
+                var parentId = parseInt($(this).val());
+                self.populateSubcategories(parentId, '#admin-filter-subcategory', '#admin-subcat-wrapper');
+                // Reset Level 3
+                self.container.find('#admin-subsubcat-wrapper').addClass('d-none');
+                self.container.find('#admin-filter-subsubcategory').html('<option value="0">All</option>');
+
+                self.updateCategoryFilter();
+            });
+
+            // Category Level 2 -> Level 3
+            this.container.find('#admin-filter-subcategory').on('change', function () {
+                var parentId = parseInt($(this).val());
+                self.populateSubcategories(parentId, '#admin-filter-subsubcategory', '#admin-subsubcat-wrapper');
+
+                self.updateCategoryFilter();
+            });
+
+            // Category Level 3 Change
+            this.container.find('#admin-filter-subsubcategory').on('change', function () {
+                self.updateCategoryFilter();
             });
         },
 
-        toggleSubcatOptions: function () {
-            var catId = this.currentFilters.categoryid;
-            if (catId > 0) {
-                $('#admin-subcategory-options').show();
-            } else {
-                $('#admin-subcategory-options').hide();
+        populateSubcategories: function (parentId, selectSelector, wrapperSelector) {
+            var $select = this.container.find(selectSelector);
+            var $wrapper = this.container.find(wrapperSelector);
+
+            $select.html('<option value="0">All</option>');
+
+            if (!parentId || parentId === 0) {
+                $wrapper.addClass('d-none');
+                return;
             }
-        },
 
-        updateCourseOptions: function () {
-            var catId = this.currentFilters.categoryid;
-            var $courseSelect = $('#admin-filter-course');
-            $courseSelect.empty();
-            $courseSelect.append('<option value="0">All Courses</option>');
+            var children = this.allCategories.filter(function (c) {
+                return c.parent === parentId;
+            });
 
-            // Helper to check subcategory
-            var isSubcategory = function (parentPath, catIdToCheck) {
-                // We need path info for this. backend sends {id, name, parent}. 
-                // It does NOT send path in filter_options.
-                // So we can only filter by DIRECT parent client-side unless we recursively find children.
-                // Or we update backend to send path.
-                // For now, let's just filter by direct category to be safe, or ALL if complex.
-                // Actually, let's use the list of categories to build a hierarchy map.
-                return false;
-            };
-
-            // To properly filter courses by "Category + Subcategories" client side, I need the structure.
-            // I'll filter by Direct Category for now. 
-            // If the user wants courses from subcats, they can select subcat.
-            // OR I just show ALL courses if Cat is 0. 
-            // If Cat > 0, show courses where course.category == catId.
-
-            var filteredCourses = this.filterOptions.courses;
-            if (catId > 0) {
-                filteredCourses = filteredCourses.filter(function (c) {
-                    return c.category == catId; // Strict equality check? id is int.
+            if (children.length > 0) {
+                children.forEach(function (c) {
+                    $select.append('<option value="' + c.id + '">' + c.name + '</option>');
                 });
+                $wrapper.removeClass('d-none');
+            } else {
+                $wrapper.addClass('d-none');
             }
+        },
 
-            filteredCourses.forEach(function (c) {
-                $courseSelect.append('<option value="' + c.id + '">' + c.name + '</option>');
-            });
+        updateCategoryFilter: function () {
+            // Determine the deepest selected category
+            var cat3 = parseInt(this.container.find('#admin-filter-subsubcategory').val()) || 0;
+            var cat2 = parseInt(this.container.find('#admin-filter-subcategory').val()) || 0;
+            var cat1 = parseInt(this.container.find('#admin-filter-category').val()) || 0;
+
+            if (cat3 > 0) this.currentFilters.categoryid = cat3;
+            else if (cat2 > 0) this.currentFilters.categoryid = cat2;
+            else this.currentFilters.categoryid = cat1;
+
+            // Reset course if category changes? Optional. Let's keep course filter independent but prioritize it?
+            // Actually, usually users filter by Category OR Course. 
+            // If they pick a category, we might want to reset course filter or filter course list.
+            // Let's reset course to 'All' to avoid confusion.
+            $('#admin-filter-course').val(0);
+            this.currentFilters.courseid = 0;
+
+            this.loadData();
         },
 
         renderStats: function (data) {
             $('#total-students-count').html(data.total_students);
+            $('#active-students-count').html(data.active_students !== undefined ? data.active_students : '-');
+            $('#total-enrollments-count').html(data.total_enrollments !== undefined ? data.total_enrollments : '-');
             $('#total-teachers-count').html(data.total_teachers);
             $('#total-courses-count').html(data.total_courses);
-            $('#total-categories-count').html(data.categories.length);
+            // Categories count removed from UI
         },
 
         renderCharts: function (data) {
             var self = this;
             require(['core/chartjs'], function (ChartJS) {
-                // Determine if we need to destroy old charts?
-                // ChartJS usually needs canvas cleanup.
-
                 try {
                     self.renderCategoryChart(data.categories, ChartJS);
-                    self.renderRatioChart(data.total_students, data.total_teachers, ChartJS);
+                    // New Activity Chart
+                    if (data.activities_by_type) {
+                        self.renderActivityChart(data.activities_by_type, ChartJS);
+                    }
                 } catch (e) {
                     console.error('Error constructing charts:', e);
                 }
-            }, function (err) {
-                console.error('Failed to load core/chartjs:', err);
-                $('#chart-enrollments-category').parent().html('<div class="alert alert-warning small">Charts could not be loaded.</div>');
             });
         },
 
         renderCategoryChart: function (categories, ChartJS) {
-            // ... existing chart code ...
-            // We need to handle Chart destruction to animate/update correctly.
-            // Or just replace the canvas?
-
             var canvasId = 'chart-enrollments-category';
             var $canvasContainer = $('#' + canvasId).parent();
-            // Destroy existing chart instance if saved?
-            // Simple way: Clear container and re-add canvas
-            // $canvasContainer.html('<canvas id="' + canvasId + '"></canvas>');
-            // But verify container structure in template.
-            // Usually <div style="height:300px"><canvas id="..."></canvas></div>
-
-            // Recreating canvas is safest for ChartJS updates
             $('#' + canvasId).remove();
-            $canvasContainer.append('<canvas id="' + canvasId + '"></canvas>');
+            $canvasContainer.append('<canvas id="' + canvasId + '"></canvas>'); // Recreate
 
             var ctx = document.getElementById(canvasId);
             if (!ctx) return;
@@ -1093,6 +1110,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
 
             var labels = top.map(function (c) { return c.name; });
             var students = top.map(function (c) { return c.student_count; });
+            // Teachers dataset removed? Or kept? Keeping for consistency if useful.
             var teachers = top.map(function (c) { return c.teacher_count; });
 
             new ChartJS(ctx, {
@@ -1117,27 +1135,18 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            labels: { color: '#e0e0e0' }
-                        }
+                        legend: { labels: { color: '#e0e0e0' } }
                     },
                     scales: {
-                        x: {
-                            ticks: { color: '#e0e0e0' },
-                            grid: { color: 'rgba(255,255,255,0.08)' }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: { color: '#e0e0e0' },
-                            grid: { color: 'rgba(255,255,255,0.08)' }
-                        }
+                        x: { ticks: { color: '#e0e0e0' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                        y: { beginAtZero: true, ticks: { color: '#e0e0e0' }, grid: { color: 'rgba(255,255,255,0.08)' } }
                     }
                 }
             });
         },
 
-        renderRatioChart: function (students, teachers, ChartJS) {
-            var canvasId = 'chart-user-ratio';
+        renderActivityChart: function (activities, ChartJS) {
+            var canvasId = 'chart-activities';
             var $canvasContainer = $('#' + canvasId).parent();
             $('#' + canvasId).remove();
             $canvasContainer.append('<canvas id="' + canvasId + '"></canvas>');
@@ -1145,21 +1154,37 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             var ctx = document.getElementById(canvasId);
             if (!ctx) return;
 
+            // Prepare data
+            // activities is object: {assessment: X, collaboration: Y, ...}
+            var labels = [];
+            var data = [];
+            var colors = [
+                'rgba(255, 99, 132, 0.7)', // Red
+                'rgba(54, 162, 235, 0.7)', // Blue
+                'rgba(255, 206, 86, 0.7)', // Yellow
+                'rgba(75, 192, 192, 0.7)', // Teal
+                'rgba(153, 102, 255, 0.7)', // Purple
+                'rgba(255, 159, 64, 0.7)'  // Orange
+            ];
+
+            // Capitalize labels
+            for (var key in activities) {
+                if (activities.hasOwnProperty(key)) {
+                    var label = key.charAt(0).toUpperCase() + key.slice(1);
+                    labels.push(label);
+                    data.push(activities[key]);
+                }
+            }
+
             new ChartJS(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Students', 'Teachers'],
+                    labels: labels,
                     datasets: [{
-                        data: [students, teachers],
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.6)',
-                            'rgba(255, 99, 132, 0.6)'
-                        ],
-                        borderColor: [
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 99, 132, 1)'
-                        ],
-                        borderWidth: 1
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 1,
+                        borderColor: '#ffffff'
                     }]
                 },
                 options: {
@@ -1167,7 +1192,22 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            labels: { color: '#e0e0e0' }
+                            position: 'right',
+                            labels: { color: '#e0e0e0', boxWidth: 15 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    var label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    var value = context.parsed;
+                                    var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    var percentage = Math.round((value / total) * 100) + '%';
+                                    return label + value + ' (' + percentage + ')';
+                                }
+                            }
                         }
                     }
                 }
@@ -1179,38 +1219,36 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             $tbody.empty();
 
             if (categories.length === 0) {
-                $tbody.append('<tr><td colspan="5" class="text-center text-muted">No data found for this filter.</td></tr>');
+                $tbody.append('<tr><td colspan="4" class="text-center text-muted">No data found for this filter.</td></tr>');
                 return;
             }
 
             categories.forEach(function (cat) {
-                var ratio = cat.teacher_count > 0 ? (cat.student_count / cat.teacher_count).toFixed(1) : '-';
+                // Ratio column removed
                 var html = '<tr>';
                 html += '<td>' + cat.name + '</td>';
                 html += '<td class="text-center">' + cat.course_count + '</td>';
-                html += '<td class="text-center">' + cat.student_count + '</td>';
+                html += '<td class="text-center bg-light fw-bold">' + cat.student_count + '</td>';
                 html += '<td class="text-center">' + cat.teacher_count + '</td>';
-                html += '<td class="text-center">' + ratio + '</td>';
                 html += '</tr>';
                 $tbody.append(html);
             });
         },
 
         exportToCSV: function () {
-            var data = this.lastData; // Need to store this
+            var data = this.lastData;
             if (!data || !data.categories) return;
 
             var csv = [];
-            csv.push('Category,Courses,Students,Teachers,Ratio');
+            // Updated header - remove Ratio
+            csv.push('Category,Courses,Students,Teachers');
 
             data.categories.forEach(function (cat) {
-                var ratio = cat.teacher_count > 0 ? (cat.student_count / cat.teacher_count).toFixed(1) : '-';
                 var row = [
                     '"' + cat.name.replace(/"/g, '""') + '"',
                     cat.course_count,
                     cat.student_count,
-                    cat.teacher_count,
-                    ratio
+                    cat.teacher_count
                 ];
                 csv.push(row.join(','));
             });
