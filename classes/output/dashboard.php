@@ -115,6 +115,49 @@ class dashboard implements renderable, templatable
             ? 'Admin / Manager Dashboard'
             : \get_string('pluginname', 'local_smartdashboard');
 
+        // Check for specific student view (Not privileged, and has student role)
+        global $USER, $PAGE;
+        $isstudent = false;
+
+        if (!$this->isPrivileged) {
+            // Check if user has any student role assignment
+            $studentroles = \get_archetype_roles('student');
+            foreach ($studentroles as $role) {
+                if (\user_has_role_assignment($USER->id, $role->id)) {
+                    $isstudent = true;
+                    break;
+                }
+            }
+        }
+        $data->isstudent = $isstudent;
+
+        if ($isstudent) {
+            // Get user profile for welcome banner
+            $userpicture = new \user_picture($USER);
+            $userpicture->size = 1; // Large size (100px)
+            $data->userprofileurl = $userpicture->get_url($PAGE)->out(false);
+            $data->userfullname = fullname($USER);
+            $data->welcomebackstudent = \get_string('welcomebackstudent', 'local_smartdashboard', $data->userfullname);
+
+            // Get configured icons
+            $studenticons = [];
+            for ($i = 1; $i <= 10; $i++) {
+                $name = \get_config('local_smartdashboard', 'icon_name_' . $i);
+                $class = \get_config('local_smartdashboard', 'icon_class_' . $i);
+                $url = \get_config('local_smartdashboard', 'icon_url_' . $i);
+
+                if (!empty($name)) {
+                    $studenticons[] = [
+                        'name' => $name,
+                        'iconclass' => $class ?: 'fa-circle-o',
+                        'url' => $url ?: '#'
+                    ];
+                }
+            }
+            $data->studenticons = $studenticons;
+            $data->hasstudenticons = !empty($studenticons);
+        }
+
         foreach ($this->coursesInput as $course) {
             $coursecontext = context_course::instance($course->id);
 

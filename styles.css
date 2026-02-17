@@ -391,6 +391,36 @@ body.path-local-smartdashboard .secondary-navigation {
     }
 }
 
+/* Student Icon Cards */
+.student-icon-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    background-color: #fff !important;
+    /* Ensure white by default */
+}
+
+.student-icon-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.student-icon-card .text-dark {
+    color: #1f2937 !important;
+}
+
+/* Dark mode support for student icons */
+body.path-local-smartdashboard .student-icon-card {
+    background-color: #323548 !important;
+}
+
+body.path-local-smartdashboard .student-icon-card .text-dark {
+    color: #e3e2e2 !important;
+}
+
+body.path-local-smartdashboard .student-icon-card .bg-light {
+    background-color: #252836 !important;
+    color: #60a5fa !important;
+}
+
 /* ============================================================
    Moodle Blocks Override — Exclude blocks from dark background
    ONLY targets .block elements rendered via {{{blocks_main}}}

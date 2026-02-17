@@ -35,3 +35,13 @@ $string['section_grading'] = 'Grading';
 $string['section_progress'] = 'Student Progress';
 $string['section_analytics'] = 'Analytics';
 $string['section_settings'] = 'Settings';
+
+// Student Dashboard Settings
+$string['student_icons_heading'] = 'Student Dashboard Icons';
+$string['student_icons_desc'] = 'Configure the icons displayed on the student dashboard welcome banner.';
+$string['icon_heading'] = 'Icon {$a}';
+$string['icon_name'] = 'Icon Name';
+$string['icon_class'] = 'Icon Class (FontAwesome)';
+$string['icon_class_desc'] = 'e.g. "fa-book", "fa-graduation-cap"';
+$string['icon_url'] = 'Link URL';
+$string['welcomebackstudent'] = 'Welcome back, {$a}!';
