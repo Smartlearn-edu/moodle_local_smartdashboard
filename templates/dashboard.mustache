@@ -76,7 +76,6 @@
             <div class="row mb-4 align-items-center">
                 <div class="col-12">
                     <h2 class="dashboard-title">{{dashboardtitle}}</h2>
-                    {{{blocks_main}}}
                     <div class="dashboard-banner">
                         <h2>Welcome back!</h2>
                         <p>Here are the courses you are teaching. Track student progress, grading, and engagement insights.</p>
@@ -88,6 +87,7 @@
             <div id="content-container">
                 
                 <div id="section-overview" class="dashboard-section">
+                    {{{blocks_main}}}
                     
                     {{#isprivileged}}
                     <div class="card mb-4 border-0 shadow-sm animate__animated animate__fadeIn">
