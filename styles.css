@@ -58,18 +58,11 @@ body.path-local-smartdashboard .secondary-navigation {
 .dashboard-container h6,
 .dashboard-container .dashboard-title {
     color: #ffffff !important;
-    font-weight: 500;
 }
 
 /* Subtitle / muted text — brighter for readability */
 .dashboard-container .text-muted {
     color: #94d2bd !important;
-}
-
-/* Form labels — use a bright, visible color */
-.dashboard-container .form-label {
-    color: #a8dadc !important;
-    font-weight: 600;
 }
 
 /* Sidebar */
@@ -113,19 +106,18 @@ body.path-local-smartdashboard .secondary-navigation {
     opacity: 0.8;
 }
 
-/* Cards & Sections */
+/* ---------------------------------------------------------------------------------- */
+/* GLOBAL DARK MODE COMPONENT STYLES (Default for Analytics, Payments, Settings etc.) */
+/* ---------------------------------------------------------------------------------- */
+
+/* Default Cards (Dark) */
 .dashboard-container .card {
     background-color: #2b2d3e;
     border: 1px solid #3e4152;
     border-radius: 12px;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
     margin-bottom: 20px;
-}
-
-/* Nested cards (like course cards or section cards) */
-.dashboard-container .dashboard-section .card {
-    background-color: #323548;
-    border: none;
+    color: #e3e2e2;
 }
 
 .dashboard-container .card-header {
@@ -133,45 +125,9 @@ body.path-local-smartdashboard .secondary-navigation {
     border-bottom: 1px solid #3e4152;
     color: #ffffff;
     font-weight: 600;
-    padding: 15px 20px;
 }
 
-.dashboard-container .card-body {
-    padding: 20px;
-}
-
-/* Course Cards Specifics */
-.dashboard-container .course-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background-color: #323548;
-}
-
-.dashboard-container .course-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
-}
-
-.dashboard-container .card-img-top-wrapper {
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    background-color: #252836 !important;
-}
-
-/* Links */
-.dashboard-container a {
-    color: #60a5fa;
-}
-
-.dashboard-container a:hover {
-    color: #93c5fd;
-    text-decoration: none;
-}
-
-.dashboard-container .text-dark {
-    color: #e3e2e2 !important;
-}
-
-/* Forms & Inputs */
+/* Default Forms (Dark) */
 .dashboard-container .form-select,
 .dashboard-container .form-control {
     background-color: #1f222e;
@@ -188,7 +144,7 @@ body.path-local-smartdashboard .secondary-navigation {
     box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
 }
 
-/* Tables */
+/* Default Tables (Dark) */
 .dashboard-container .table {
     color: #e3e2e2;
     --bs-table-bg: transparent;
@@ -197,101 +153,186 @@ body.path-local-smartdashboard .secondary-navigation {
     --bs-table-border-color: #3e4152;
 }
 
-/* Table headers — bright golden/yellow for high contrast on dark */
 .dashboard-container .table thead th {
     border-bottom: 2px solid #4a4f65;
     color: #fbbf24 !important;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    padding: 12px;
 }
 
-/* Override table-light for dark mode — use a dark blue-grey instead of white */
-.dashboard-container .table-light,
-.dashboard-container thead.table-light,
-.dashboard-container .table-light th,
-.dashboard-container thead.table-light th {
-    --bs-table-bg: #1e2233 !important;
-    --bs-table-color: #fbbf24 !important;
-    background-color: #1e2233 !important;
-    color: #fbbf24 !important;
-    border-color: #4a4f65 !important;
+/* Default Links (Light Blue) */
+.dashboard-container a {
+    color: #60a5fa;
 }
 
-.dashboard-container .table td,
-.dashboard-container .table th {
-    border-color: #3e4152;
-    vertical-align: middle;
+.dashboard-container a:hover {
+    color: #93c5fd;
+    text-decoration: none;
 }
 
-/* Dynamically generated thead bg-light override */
-.dashboard-container thead.bg-light,
-.dashboard-container thead.bg-light th {
-    background-color: #1e2233 !important;
-    color: #fbbf24 !important;
+
+/* ---------------------------------------------------------------------------------- */
+/* OVERVIEW SECTION OVERRIDES - LIGHT MODE (As Requested)                             */
+/* ---------------------------------------------------------------------------------- */
+
+/* Force all text in Overview to be dark by default */
+#section-overview {
+    color: #333333 !important;
 }
 
-/* List Groups */
-.dashboard-container .list-group-item {
-    background-color: transparent;
-    border-color: #3e4152;
-    color: #e3e2e2;
+/* Override Cards & Blocks in Overview to be White/Light */
+#section-overview .card,
+#section-overview .block {
+    background-color: #ffffff !important;
+    color: #333333 !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    border-radius: 8px !important;
 }
 
-/* Badges */
-.dashboard-container .badge.bg-light {
-    background-color: #3e4152 !important;
-    color: #e3e2e2 !important;
+/* Card/Block Headers */
+#section-overview .card-header,
+#section-overview .block .header,
+#section-overview .block .card-title {
+    background-color: transparent !important;
+    color: #333333 !important;
+    border-bottom: 1px solid #dee2e6 !important;
 }
 
-/* Alerts */
-.dashboard-container .alert {
-    background-color: #323548;
-    border-color: #3e4152;
-    color: #e3e2e2;
+/* Headings in Overview */
+#section-overview h1,
+#section-overview h2,
+#section-overview h3,
+#section-overview h4,
+#section-overview h5,
+#section-overview h6,
+#section-overview .card-title,
+#section-overview .dashboard-title {
+    color: #333333 !important;
 }
 
-/* Utils */
-.dashboard-container .bg-white {
-    background-color: #323548 !important;
-    color: #e3e2e2 !important;
+/* Card Body Content */
+#section-overview .card-body,
+#section-overview .block .content,
+#section-overview .block .card-body {
+    color: #333333 !important;
 }
 
-.dashboard-container .bg-light {
-    background-color: #252836 !important;
-    color: #e3e2e2 !important;
+/* Links in Overview (Standard Moodle Blue) */
+#section-overview a {
+    color: #0f6cbf !important;
 }
 
-/* Buttons */
-.dashboard-container .btn-outline-secondary {
-    color: #aeb0b5;
-    border-color: #3e4152;
+#section-overview a:hover {
+    color: #0d5ca0 !important;
+    text-decoration: underline;
 }
 
-.dashboard-container .btn-outline-secondary:hover {
-    background-color: #3e4152;
-    color: #fff;
+/* Forms in Overview */
+#section-overview .form-select,
+#section-overview .form-control {
+    background-color: #ffffff !important;
+    color: #333333 !important;
+    border: 1px solid #ced4da !important;
 }
 
-/* Card header bg-white fix — force dark for chart section headers */
-.dashboard-container .card-header.bg-white {
-    background-color: #323548 !important;
+#section-overview .form-label {
+    color: #333333 !important;
+}
+
+/* Buttons in Overview */
+#section-overview .btn-outline-secondary {
+    color: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+#section-overview .btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    color: #fff !important;
+}
+
+#section-overview .text-muted {
+    color: #6c757d !important;
+}
+
+/* Tables in Overview */
+#section-overview .table {
+    color: #333333 !important;
+    --bs-table-bg: #ffffff;
+    --bs-table-color: #333333;
+    --bs-table-hover-bg: rgba(0, 0, 0, 0.075);
+    --bs-table-border-color: #dee2e6;
+}
+
+#section-overview .table thead th {
+    color: #333333 !important;
+    border-bottom: 2px solid #dee2e6 !important;
+}
+
+/* Badges in Overview: Reset background */
+#section-overview .badge.bg-light {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+/* Course Cards Specifics in Overview */
+#section-overview .course-card .card-img-top-wrapper {
+    background-color: #e9ecef !important;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#section-overview .text-dark {
+    color: #212529 !important;
+    /* Restore standard dark text class */
+}
+
+/* --- Block Specifics in Overview to ensure cleanliness --- */
+#section-overview .block_calendar_month .maincalendar .calendarmonth td,
+#section-overview .block_calendar_month .maincalendar .calendarmonth th {
+    color: #333333 !important;
+}
+
+#section-overview .block_calendar_month .calendar-controls .current,
+#section-overview .block_calendar_month .calendar-controls .arrow_link {
+    color: #333333 !important;
+}
+
+#section-overview .block_calendar_month .maincalendar .calendarmonth td a {
+    color: #333333 !important;
+}
+
+/* Today highlight in light mode */
+#section-overview .block_calendar_month .maincalendar .calendarmonth td.today {
+    background-color: #0f6cbf !important;
     color: #ffffff !important;
-    border: none !important;
 }
 
-/* Chart section heading text override */
-.dashboard-container .card-header h6 {
+#section-overview .block_calendar_month .maincalendar .calendarmonth td.today a {
     color: #ffffff !important;
 }
 
-/* Dashboard Banner Component */
+/* Popovers/Dropdowns inside Overview */
+#section-overview .dropdown-menu {
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    color: #212529 !important;
+}
+
+#section-overview .dropdown-item {
+    color: #212529 !important;
+}
+
+#section-overview .dropdown-item:hover {
+    background-color: #f8f9fa !important;
+}
+
+
+/* ---------------------------------------------------------------------------------- */
+/* OTHER UTILITIES & RESPONSIVE (Keep standard)                                       */
+/* ---------------------------------------------------------------------------------- */
+
+/* Dashboard Banner Component (Keep colorful/dark compliant as it is a banner) */
 .dashboard-banner {
     position: relative;
     background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-    /* Deep Blue to Accent Blue */
     border-radius: 12px;
     padding: 24px 30px;
     margin-bottom: 25px;
@@ -314,19 +355,11 @@ body.path-local-smartdashboard .secondary-navigation {
 }
 
 .dashboard-banner h2 {
-    margin: 0 0 8px 0;
-    font-size: 1.8rem;
-    font-weight: 700;
     color: #ffffff !important;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .dashboard-banner p {
-    margin: 0;
-    font-size: 1.05rem;
-    opacity: 0.95;
     color: #e3e2e2 !important;
-    max-width: 80%;
 }
 
 /* Responsive */
@@ -383,9 +416,6 @@ body.path-local-smartdashboard .secondary-navigation {
         text-align: center;
     }
 
-    /* Hide submenus in collapsed mode usually, or make them popovers. 
-       For now, let's just hide the chevron and maybe the submenu creates a weird UX if expanded.
-       Let's forcibly hide the submenu when collapsed to avoid layout issues */
     .dashboard-container.sidebar-collapsed .collapse.show {
         display: none;
     }
