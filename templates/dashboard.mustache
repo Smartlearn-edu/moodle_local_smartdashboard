@@ -79,8 +79,8 @@
                     
                     {{#isstudent}}
                     <!-- New Student Banner -->
-                    <div class="student-welcome-banner p-4 rounded-3 text-white mb-4 d-flex align-items-center animate__animated animate__fadeIn" style="background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);">
-                         <div class="me-4 flex-shrink-0">
+                    <div class="student-welcome-banner p-3 p-md-4 rounded-3 text-white mb-4 d-flex flex-column flex-md-row align-items-center text-center text-md-start animate__animated animate__fadeIn" style="background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);">
+                         <div class="mb-3 mb-md-0 me-md-4 flex-shrink-0">
                              <img src="{{userprofileurl}}" alt="{{userfullname}}" class="rounded-circle border border-3 border-white shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
                          </div>
                          <div>
@@ -91,12 +91,12 @@
 
                      <!-- Configurable Icons Grid -->
                      {{#hasstudenticons}}
-                     <div class="row g-3 mb-5">
+                     <div class="row g-2 g-md-3 mb-5">
                          {{#studenticons}}
                          <div class="col-6 col-md-4 col-lg-2">
                              <a href="{{url}}" class="card text-decoration-none border-0 shadow-sm h-100 student-icon-card animate__animated animate__fadeInUp">
                                  <div class="card-body text-center py-4">
-                                     <div class="icon-wrapper mb-3 text-primary bg-light rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 24px;">
+                                     <div class="icon-wrapper student-icon-wrapper mb-3 text-primary bg-light rounded-circle mx-auto d-flex align-items-center justify-content-center">
                                          <i class="fa {{iconclass}}"></i>
                                      </div>
                                      <h6 class="fw-bold text-dark mb-0 small">{{name}}</h6>

@@ -421,6 +421,21 @@ body.path-local-smartdashboard .student-icon-card .bg-light {
     color: #60a5fa !important;
 }
 
+/* Responsive Icon Wrapper */
+.student-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+}
+
+@media (min-width: 768px) {
+    .student-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+}
+
 /* ============================================================
    Moodle Blocks Override — Exclude blocks from dark background
    ONLY targets .block elements rendered via {{{blocks_main}}}
