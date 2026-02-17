@@ -1797,6 +1797,7 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             var self = this;
             this.container = $('#section-settings');
 
+            // --- Payment Settings ---
             // Show/hide estimated options based on radio selection
             this.container.find('input[name="payment_mode"]').on('change', function () {
                 if ($(this).val() === 'estimated') {
@@ -1834,6 +1835,57 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             this.container.find('#btn-save-settings').on('click', function () {
                 self.save();
             });
+
+            // --- Theme Preference (Background) ---
+            this.initTheme();
+        },
+
+        initTheme: function () {
+            var self = this;
+            // Load saved background from local storage (fastest)
+            var savedBg = localStorage.getItem('smartdashboard_bg_color') || '#f5f5f5';
+
+            this.applyBackground(savedBg);
+            this.updateThemeInputs(savedBg);
+
+            // Bind inputs
+            var $colorInput = this.container.find('#setting-bg-color');
+            var $textInput = this.container.find('#setting-bg-color-text');
+            var $resetBtn = this.container.find('#btn-reset-bg');
+
+            $colorInput.on('input change', function () {
+                var val = $(this).val();
+                $textInput.val(val);
+                self.applyBackground(val);
+                localStorage.setItem('smartdashboard_bg_color', val);
+            });
+
+            $textInput.on('change', function () {
+                var val = $(this).val();
+                $colorInput.val(val);
+                self.applyBackground(val);
+                localStorage.setItem('smartdashboard_bg_color', val);
+            });
+
+            $resetBtn.on('click', function () {
+                var defaultBg = '#f5f5f5';
+                self.applyBackground(defaultBg);
+                self.updateThemeInputs(defaultBg);
+                localStorage.setItem('smartdashboard_bg_color', defaultBg);
+            });
+        },
+
+        applyBackground: function (color) {
+            // Apply strictly to the body background with !important
+            var body = document.querySelector('body.path-local-smartdashboard');
+            if (body) {
+                body.style.setProperty('background-color', color, 'important');
+            }
+        },
+
+        updateThemeInputs: function (color) {
+            this.container.find('#setting-bg-color').val(color);
+            this.container.find('#setting-bg-color-text').val(color);
         },
 
         save: function () {
@@ -2228,6 +2280,15 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
 
     return {
         init: function () {
+            // Theme: Apple saved background immediately
+            var savedBg = localStorage.getItem('smartdashboard_bg_color');
+            if (savedBg) {
+                var body = document.querySelector('body.path-local-smartdashboard');
+                if (body) {
+                    body.style.setProperty('background-color', savedBg, 'important');
+                }
+            }
+
             // Sidebar Toggle Logic
             var $sidebarToggle = $('#sidebar-toggle-btn');
             var $dashboardContainer = $('.dashboard-container');
