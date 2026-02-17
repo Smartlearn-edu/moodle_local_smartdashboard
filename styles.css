@@ -390,3 +390,146 @@ body.path-local-smartdashboard .secondary-navigation {
         display: none;
     }
 }
+
+/* ============================================================
+   Moodle Blocks Override — Exclude blocks from dark background
+   ONLY targets .block elements rendered via {{{blocks_main}}}
+   ============================================================ */
+
+/* Block containers — reset to light background */
+.dashboard-container .block,
+.dashboard-container .block-region,
+.dashboard-container [data-block] {
+    background-color: #ffffff !important;
+    color: #1d2125 !important;
+    border-radius: 8px;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    margin-bottom: 12px;
+}
+
+/* Block headers */
+.dashboard-container .block .card-header,
+.dashboard-container .block .header,
+.dashboard-container .block .card-title,
+.dashboard-container .block .block-header {
+    background-color: #f8f9fa !important;
+    color: #1d2125 !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Block body */
+.dashboard-container .block .card-body,
+.dashboard-container .block .content,
+.dashboard-container .block .block-content {
+    background-color: #ffffff !important;
+    color: #1d2125 !important;
+}
+
+/* Block cards (nested cards inside blocks) */
+.dashboard-container .block .card {
+    background-color: #ffffff !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: none !important;
+    color: #1d2125 !important;
+}
+
+/* Block headings */
+.dashboard-container .block h1,
+.dashboard-container .block h2,
+.dashboard-container .block h3,
+.dashboard-container .block h4,
+.dashboard-container .block h5,
+.dashboard-container .block h6 {
+    color: #1d2125 !important;
+}
+
+/* Block text and muted text */
+.dashboard-container .block .text-muted {
+    color: #6c757d !important;
+}
+
+.dashboard-container .block .text-dark {
+    color: #1d2125 !important;
+}
+
+/* Block links */
+.dashboard-container .block a {
+    color: #0d6efd !important;
+}
+
+.dashboard-container .block a:hover {
+    color: #0a58ca !important;
+}
+
+/* Block forms/inputs */
+.dashboard-container .block .form-select,
+.dashboard-container .block .form-control {
+    background-color: #ffffff !important;
+    border: 1px solid #ced4da !important;
+    color: #1d2125 !important;
+}
+
+/* Block tables */
+.dashboard-container .block .table {
+    color: #1d2125 !important;
+    --bs-table-bg: #ffffff;
+    --bs-table-color: #1d2125;
+    --bs-table-hover-bg: #f8f9fa;
+    --bs-table-border-color: #dee2e6;
+}
+
+.dashboard-container .block .table thead th {
+    color: #1d2125 !important;
+}
+
+/* Block bg-white and bg-light resets */
+.dashboard-container .block .bg-white {
+    background-color: #ffffff !important;
+    color: #1d2125 !important;
+}
+
+.dashboard-container .block .bg-light {
+    background-color: #f8f9fa !important;
+    color: #1d2125 !important;
+}
+
+/* Block badges */
+.dashboard-container .block .badge.bg-light {
+    background-color: #e9ecef !important;
+    color: #1d2125 !important;
+}
+
+/* Block alerts */
+.dashboard-container .block .alert {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #1d2125 !important;
+}
+
+/* Block list groups */
+.dashboard-container .block .list-group-item {
+    background-color: #ffffff !important;
+    border-color: #dee2e6 !important;
+    color: #1d2125 !important;
+}
+
+/* Timeline block progress bars — keep their default colors */
+.dashboard-container .block .progress {
+    background-color: #e9ecef !important;
+}
+
+/* Block dropdown/action menus */
+.dashboard-container .block .dropdown-menu {
+    background-color: #ffffff !important;
+    border-color: #dee2e6 !important;
+    color: #1d2125 !important;
+}
+
+.dashboard-container .block .dropdown-item {
+    color: #1d2125 !important;
+}
+
+.dashboard-container .block .dropdown-item:hover {
+    background-color: #f8f9fa !important;
+}
