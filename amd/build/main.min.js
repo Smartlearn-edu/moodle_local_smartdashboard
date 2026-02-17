@@ -1876,11 +1876,23 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
         },
 
         applyBackground: function (color) {
-            // Apply strictly to the body background with !important
-            var body = document.querySelector('body.path-local-smartdashboard');
-            if (body) {
-                body.style.setProperty('background-color', color, 'important');
-            }
+            // Apply to body and all main wrapper elements to ensure full coverage
+            var selectors = [
+                'body.path-local-smartdashboard',
+                '#page',
+                '#page-wrapper',
+                '#region-main',
+                '.dashboard-container'
+            ];
+
+            selectors.forEach(function (selector) {
+                var el = document.querySelector(selector);
+                if (el) {
+                    el.style.setProperty('background-color', color, 'important');
+                    // Also remove white backgrounds potentially set by classes
+                    el.style.setProperty('background-image', 'none', 'important');
+                }
+            });
         },
 
         updateThemeInputs: function (color) {
@@ -2283,10 +2295,20 @@ define(['jquery', 'core/ajax', 'core/str', 'core/notification', 'core/modal_fact
             // Theme: Apple saved background immediately
             var savedBg = localStorage.getItem('smartdashboard_bg_color');
             if (savedBg) {
-                var body = document.querySelector('body.path-local-smartdashboard');
-                if (body) {
-                    body.style.setProperty('background-color', savedBg, 'important');
-                }
+                var selectors = [
+                    'body.path-local-smartdashboard',
+                    '#page',
+                    '#page-wrapper',
+                    '#region-main',
+                    '.dashboard-container'
+                ];
+                selectors.forEach(function (selector) {
+                    var el = document.querySelector(selector);
+                    if (el) {
+                        el.style.setProperty('background-color', savedBg, 'important');
+                        el.style.setProperty('background-image', 'none', 'important');
+                    }
+                });
             }
 
             // Sidebar Toggle Logic
