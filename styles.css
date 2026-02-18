@@ -1,13 +1,10 @@
 /* Smart Dashboard Dark Mode Styling */
 
 /* Import Font */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
-
 /* --- Page-Level Overrides for Dark Mode & Full Width --- */
 body.path-local-smartdashboard {
     background-color: #2b2d3e !important;
     color: #e3e2e2;
-    font-family: "DM Sans", sans-serif;
 }
 
 /* Force full width and remove default Moodle padding/margins */

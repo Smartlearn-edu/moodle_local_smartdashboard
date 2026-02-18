@@ -45,3 +45,4 @@ $string['icon_class'] = 'Icon Class (FontAwesome)';
 $string['icon_class_desc'] = 'e.g. "fa-book", "fa-graduation-cap"';
 $string['icon_url'] = 'Link URL';
 $string['welcomebackstudent'] = 'Welcome back, {$a}!';
+$string['privacy:metadata'] = 'The Smart Dashboard plugin does not store any personal data.';
